@@ -1,0 +1,12 @@
+{
+    "nick": "ADTEST3",
+    "port": 6667,
+    "nsident": "",
+    "SSL": false,
+    "user": "ADTEST3",
+    "nspass": "",
+    "network": "10.4.77.22",
+    "admins": [
+        "A_D!*@*"
+    ]
+}
