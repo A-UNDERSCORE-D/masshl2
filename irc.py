@@ -7,16 +7,18 @@ import select
 from logger import log
 import fnmatch
 from objs import *
+import base64
 
 channels = []
 users = []
 
 if config.config.get("SSL", False):
-    sock = ssl.socket(socket.socket())
+    sock = ssl.wrap_socket(socket.socket())
 else:
     sock = socket.socket()
 
 buffer = b""
+uhnames = False
 
 
 def sockread():
@@ -43,9 +45,7 @@ def sockread():
             i = 0
             while i < len(args):
                 if args[i][0] == ":":
-                    # TODO: This V. do I want to hand the arguments without the colon? idk,
-                    # TODO: lets mess with this
-                    args[i] = " ".join(args[i:])
+                    args[i] = " ".join(args[i:])[1:]
 
                     del args[i + 1:]
                 i += 1
@@ -54,11 +54,86 @@ def sockread():
 
 
 def sockwrite(data):
-    sock.send((data + "\r\n").encode())
-    log(data, "ircout")
+    if type(data) == bytes:
+        sock.send(data + "\r\n".encode())
+        log(data.decode(), "ircout")
+    else:
+        sock.send((data + "\r\n").encode())
+        log(data, "ircout")
 
-# TODO: ok, parsing, here? in its own file? if its here this file will need a lot of functions,
-# TODO: also, move them masshl stuff itself to its own file?
+
+def auth():
+    sockwrite("AUTHENTICATE {}".format(base64.b64encode(
+        (config.config["nick"] + "\00" + config.config["nsident"] + "\00" + config.config["nspass"]
+         ).encode()).decode()))
+
+
+def cap(args):
+    done = False
+    global uhnames
+    if args[1] == "LS":
+        if "userhost-in-names" in args[2]:
+            sockwrite("CAP REQ userhost-in-names")
+            return
+    elif args[1] == "ACK":
+        if "userhost-in-names" in args[2]:
+            uhnames = True
+        if "sasl" in args[2]:
+            sockwrite("AUTHENTICATE PLAIN")
+    elif args[1] == "NAK":
+        if "userhost-in-names" in args[2]:
+            uhnames = False
+        if "sasl" in args[2]:
+            done = True
+    if done:
+        sockwrite("CAP END")
+
+
+def onnames(args):
+    pass
+
+
+def onjoin(prefix, args):
+    chan = Channel.check(args[0], True)
+    user = User.check(prefix, True)
+    chan.adduser(user)
+    logall()
+
+
+def onpart(prefix, args):
+    user = User.check(prefix)
+    chan = Channel.check(args[0])
+    if user and chan:
+        chan.deluser(user)
+    logall()
+
+
+def onkick(args):
+    user = User.check(args[1])
+    chan = Channel.check(args[0])
+    if user and chan:
+        chan.deluser(user)
+    logall()
+
+
+def logall():
+    log("---------------------------------------CHANNELS---------------------------------------")
+    for channel in channels:
+        log(channel.name)
+        for user in channel.users:
+            log("  `-" + user.user.mask)
+    log("----------------------------------------USERS------------------------------------------")
+    for user in users:
+        log(user.mask)
+        for channel in user.channels:
+            log("  `-" + channel.channel.name)
+
+
+def connect():
+    sock.connect((config.config["network"], config.config["port"]))
+    sockwrite("CAP LS")
+    sockwrite("USER " + config.config["user"] + " * * :realname")
+    sockwrite("NICK " + config.config["nick"])
 
 
 def parse(prefix, command, args):
@@ -66,63 +141,19 @@ def parse(prefix, command, args):
         sockwrite("PONG " + " ".join(args))
     elif command == "JOIN":
         onjoin(prefix, args)
+    elif command == "PART":
+        onpart(prefix, args)
+    elif command == "KICK":
+        onkick(args)
 
-# TODO: Alright, so...
-# TODO: needs to check if there is a channel in the master list, if not, add make it. then:
-# TODO: check if there is a user in the master userlist for the joining user, if not, make it. then:
-# TODO: add the membership obj to the user and the channel. perhaps the constructor can do this?
-# TODO: if not do it here. also, sets for chanlists? thats gonna mean for loops. but meh
-# TODO: - A_D 25/4 0524
+    elif command == "CAP":
+        cap(args)
+    elif command == "AUTHENTICATE":
+        auth()
 
-
-def onjoin(prefix, args):
-    log("adding chan")
-    chan = addchan(args[0])
-    log("adding user")
-    user = adduser(prefix)
-    log("adding membership")
-    Membership.addusertochan(user, chan)
-    log("---------------------------------------CHANNEL----------------------------------------")
-    for channel in channels:
-        log(channel.name)
-        for user in channel.users:
-            log("    " + user.user.mask)
-    log("-----------------------------------------USER---------------------------------------")
-    for user in users:
-        log(user.mask)
-        for channel in user.channels:
-            log("    " + channel.channel.name)
-
-
-def adduser(mask):
-    if mask[0] == ":":
-        mask = mask[1:]
-    n, u = mask.split("!", 1)
-    u, h = u.split("@", 1)
-    for user in users:
-        log("checking users")
-        if user == mask.split("!")[0]:
-            return user
-    temp = User(n, u, h)
-    log("adding new user")
-    users.append(temp)
-    return temp
-
-
-def addchan(name):
-    for chan in channels:
-        log("checking channels")
-        if chan == name:
-            return chan
-    temp = Channel(name)
-    log("adding user")
-    channels.append(temp)
-    return temp
-
-# def onpm(msg, prefix):
-#     prefix = prefix[1:]
-#     pass
-
-sock.connect((config.config["network"], config.config["port"]))
-sockwrite("USER " + config.config["user"] + " * * :realname")
-sockwrite("NICK " + config.config["nick"])
+    elif command == "353":
+        onnames(args)
+    elif command == "904":
+        sockwrite("CAP END")
+    elif command == "903":
+        sockwrite("CAP END")
