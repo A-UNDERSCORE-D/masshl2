@@ -3,5 +3,7 @@ import irc
 print("MASSHL 2.0")
 print("By A_D")
 
+
+irc.connect()
 while True:
     irc.sockread()
