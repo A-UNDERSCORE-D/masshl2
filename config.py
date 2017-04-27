@@ -2,14 +2,15 @@ import json
 import os.path
 
 config = {
-    "network": "10.4.77.22",
-    "port": 6667,
-    "SSL": False,
-    "user": "ADTEST3",
-    "nick": "ADTEST3",
-    "nsident": "",
-    "nspass": "",
-    "admins": ["A_D!*@*"]
+    "network": "",
+    "port": 6697,
+    "SSL": True,
+    "user": "MHL2",
+    "nick": "MHL2",
+    "nsident": "MHL",
+    "nspass": "MHLPassword",
+    "admins": ["A_D!*@*"],
+    "debug": True
 }
 
 
