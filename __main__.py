@@ -21,6 +21,7 @@ def run():
     connection.connect()
     original_handler = signal.getsignal(signal.SIGINT)
 
+    # Called when we receive SIGINT, exits the connection gracefully
     def interrupted(signo, frame):
         connection.quit("Killed by user.")
         connection.close()

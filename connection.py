@@ -34,13 +34,16 @@ class Connection:
 
     def read(self):
         if self.connected:
-            readable, _, _ = select.select([self.socket], [], [], 5)
-            if self.socket in readable:
-                data = self.socket.recv(65535)
-                if not data:
-                    self.socket.close()
-                    self.connected = False
-                self.parse(data)
+            try:
+                readable, _, _ = select.select([self.socket], [], [], 5)
+                if self.socket in readable:
+                    data = self.socket.recv(65535)
+                    if not data:
+                        self.close()
+                    self.parse(data)
+
+            except OSError as e:
+                log("Error: {error}.".format(error=e))
 
     def write(self, data):
         if isinstance(data, bytes):
