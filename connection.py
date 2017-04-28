@@ -1,6 +1,5 @@
 import socket
 import ssl
-import sys
 import select
 from logger import log
 from handler import handler
@@ -22,25 +21,26 @@ class Connection:
         self.nspass = nspass
         self.channels = {}
         self.users = {}
+        self.connected = False
 
     def connect(self):
         if self.ssl:
             self.socket = ssl.wrap_socket(self.socket)
         self.socket.connect((self.host, self.port))
+        self.connected = True
         self.write("CAP LS")
         self.write("NICK {nick}".format(nick=self.nick))
         self.write("USER {user} * * :{gecos}".format(user=self.user, gecos=self.gecos))
 
     def read(self):
-        readable, _, _ = select.select([self.socket], [], [], 5)
-        if self.socket in readable:
-            data = self.socket.recv(65535)
-            if not data:
-                self.socket.close()
-                # TODO: Get the full dead parrot rant
-                sys.exit("Socket Closed. This socket is no more, it has ceased to be. "
-                         "Its expired and gone to meet its maker. THIS IS AN EX SOCKET!")
-            self.parse(data)
+        if self.connected:
+            readable, _, _ = select.select([self.socket], [], [], 5)
+            if self.socket in readable:
+                data = self.socket.recv(65535)
+                if not data:
+                    self.socket.close()
+                    self.connected = False
+                self.parse(data)
 
     def write(self, data):
         if isinstance(data, bytes):
@@ -71,3 +71,10 @@ class Connection:
                     del args[i + 1:]
                 i += 1
             handler(self, prefix, cmd, args)
+
+    def quit(self, message):
+        self.write("QUIT :{msg}".format(msg=message))
+
+    def close(self):
+        self.socket.close()
+        self.connected = False

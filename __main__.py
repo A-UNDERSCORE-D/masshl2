@@ -1,7 +1,8 @@
 # import irc
 from connection import Connection
 from config import *
-from handler import handler
+import sys
+import signal
 # TODO: NEEDS MOAR ASCII ART!
 
 
@@ -18,9 +19,19 @@ def run():
         nspass=config["nspass"]
     )
     connection.connect()
-    while True:
-        connection.read()
+    original_handler = signal.getsignal(signal.SIGINT)
 
+    def interrupted(signo, frame):
+        connection.quit("Killed by user.")
+        connection.close()
+        signal.signal(signal.SIGINT, original_handler)
+
+    signal.signal(signal.SIGINT, interrupted)
+
+    while connection.connected:
+        connection.read()
+    print("Socket Closed. This socket is no more, it has ceased to be."
+          " Its expired and gone to meet its maker. THIS IS AN EX SOCKET!", file=sys.stderr)
 
 if __name__ == "__main__":
     run()
