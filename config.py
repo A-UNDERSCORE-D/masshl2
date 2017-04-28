@@ -13,10 +13,9 @@ config = {
     "debug": True
 }
 
-
 if not os.path.exists("config.json"):
     with open("config.json", "w") as f:
-        json.dump(config, f, indent=4)
-else:
-    with open("config.json", "r") as f:
-        config = json.load(f)
+        json.dump(config, f, indent=2)
+
+with open("config.json") as f:
+    config = json.load(f)
