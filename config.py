@@ -10,7 +10,9 @@ config = {
     "nsident": "MHL",
     "nspass": "MHLPassword",
     "admins": ["A_D!*@*"],
-    "debug": True
+    "debug": True,
+    "commands": ["JOIN ##ldtest"],
+    "cmdprefix": "~"
 }
 
 if not os.path.exists("config.json"):
