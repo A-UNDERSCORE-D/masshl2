@@ -4,13 +4,14 @@ from membership import Membership
 
 
 class Channel:
-    def __init__(self, name: str, count: int = 10, action: list = None, warn: int = 7,
-                 opchan: str = "",
-                 watched: bool = False):
+    def __init__(self, name: str, count: int = 10, action: list = None,
+                 warn: int = 7, opchan: str = "", watched: bool = False):
+
         self.name = name if name[0] != ":" else name[1:]
         self.modes = ""
         self.count = count
-        self.action = action if action else ["MODE {chan} +b {mask}", "KICK {chan} {nick}"]
+        self.action = action if action else ["MODE {chan} +b {mask}",
+                                             "KICK {chan} {nick}"]
         self.warn = warn
         self.opchan = opchan
         self.users = {}
@@ -54,7 +55,3 @@ class Channel:
         else:
             # raise ValueError("Unknown user")
             log("Got a part for an unknown user! WTF?")
-
-    @staticmethod
-    def add(connection, name: str):
-        connection.channels[name] = Channel(name)
