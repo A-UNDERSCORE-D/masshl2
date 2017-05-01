@@ -7,7 +7,8 @@ from handler import handler
 
 class Connection:
     def __init__(self, port, host, isssl, nsuser, nspass, nick, user,
-                 gecos="A_D's anti mass highlight bot"):
+                 commands=None, gecos="A_D's anti mass highlight bot",
+                 caps: set =None):
         self.port = port
         self.host = host
         self.ssl = isssl
@@ -22,6 +23,10 @@ class Connection:
         self.channels = {}
         self.users = {}
         self.connected = False
+        self.commands = commands or [""]
+        self.capcount = 0
+        self.caps = caps or {"userhost-in-names", "sasl"}
+        self.cansasl = False
 
     def connect(self):
         if self.ssl:
@@ -30,7 +35,8 @@ class Connection:
         self.connected = True
         self.write("CAP LS")
         self.write("NICK {nick}".format(nick=self.nick))
-        self.write("USER {user} * * :{gecos}".format(user=self.user, gecos=self.gecos))
+        self.write("USER {user} * * :{gecos}".format(user=self.user,
+                                                     gecos=self.gecos))
 
     def read(self):
         if self.connected:
