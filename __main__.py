@@ -16,7 +16,8 @@ def run():
         nick=config["nick"],
         user=config["user"],
         nsuser=config["nsident"],
-        nspass=config["nspass"]
+        nspass=config["nspass"],
+        commands=config["commands"]
     )
     connection.connect()
     original_handler = signal.getsignal(signal.SIGINT)
@@ -32,7 +33,8 @@ def run():
     while connection.connected:
         connection.read()
     print("Socket Closed. This socket is no more, it has ceased to be."
-          " Its expired and gone to meet its maker. THIS IS AN EX SOCKET!", file=sys.stderr)
+          " Its expired and gone to meet its maker. THIS IS AN EX SOCKET!",
+          file=sys.stderr)
 
 if __name__ == "__main__":
     run()
