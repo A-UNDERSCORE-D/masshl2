@@ -14,14 +14,20 @@ def handler(connection, prefix, command, args):
         onpart(connection, prefix, args)
     elif command == "KICK":
         onkick(connection, args)
+    elif command == "PRIVMSG":
+        onprivmsg(connection, args)
+    # elif command == "MODE":
+        # onmode(connection, args)
 
     elif command == "CAP":
         handlecap(connection, args)
     elif command == "AUTHENTICATE":
         sendauth(connection)
 
-    elif command == "001":
-        onwelcome(connection)
+    elif command == "376":
+        onendmotd(connection)
+    elif command == "005":
+        onisupport(connection, args)
     elif command == "353":
         onnames(connection, args)
     elif command == "366":
@@ -81,7 +87,7 @@ def capdecrement(connection):
     log("capcount = " + str(connection.capcount))
 
 
-def onwelcome(connection):
+def onendmotd(connection):
     for command in connection.commands:
         connection.write(command)
     if not connection.cansasl:
@@ -94,8 +100,19 @@ def identify(connection):
     ))
 
 
+def onprivmsg(connection, args):
+    msg = args[1]
+    if msg == "~print":
+        log("---------------MODES--------------------------")
+        log("A: " + str(connection.Amodes))
+        log("B: " + str(connection.Bmodes))
+        log("C: " + str(connection.Cmodes))
+        log("D: " + str(connection.Dmodes))
+        log("P: " + str(connection.Pmodes))
+
 # :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang
 # :Cloud-9.A_DNet.net 366 Roy_Mustang #adtest :End of /NAMES list.
+
 
 def onnames(connection, args):
     names = args[3].split()
@@ -153,6 +170,46 @@ def onjoin(connection, prefix, args):
         user = connection.users[nick]
         chan.adduser(connection, user)
     logall(connection)
+
+
+def onisupport(connection, args):
+    tokens = args[1:-1]
+    for token in tokens:
+        if "NETWORK" in token:
+            connection.networkname = token.split("=")[1]
+
+        elif "PREFIX" in token:
+            pfx = token.split("=")[1]
+            pfx, modes = pfx.split(")", 1)
+            pfx = pfx[1:]
+            connection.Pmodes = dict(zip(pfx, modes))
+            connection.Bmodes.update(pfx)
+
+        elif "CHANMODES" in token:
+            modes = token.split("=")[1]
+            A, B, C, D = modes.split(",")
+            connection.Amodes.update(A)
+            connection.Bmodes.update()
+            connection.Cmodes.update(C)
+            connection.Dmodes.update(D)
+
+        elif "EXCEPTS" in token:
+            mode = token.split("=")[1]
+            connection.Amodes.add(mode)
+            connection.banexept.add(mode)
+
+        elif "INVEX" in token:
+            mode = token.split("=")[1]
+            connection.Amodes.add(mode)
+            connection.invex.add(mode)
+
+
+
+
+# def onmode(connection, args):
+#     target = args[0]
+#     modes = args[1]
+#     modeargs = args[2:]
 
 
 def onpart(connection, prefix, args):

@@ -28,6 +28,25 @@ class Connection:
         self.caps = caps or {"userhost-in-names", "sasl"}
         self.cansasl = False
 
+        # Isupport stuff
+
+        # adds or removes to a list, always has a parameter from the server
+        self.Amodes = set()
+        # changes a setting on a channel, must always have a parameter from the
+        # server and from clients like o and k
+        self.Bmodes = set()
+        # must have a parameter when being set and must /not/ have one when
+        # being unset, like F and H
+        self.Cmodes = set()
+        # changes a setting on a channel, NEVER has a parameter
+        self.Dmodes = set()
+        # modes with prefixes, are essentially type B
+        self.Pmodes = {}
+        self.banexept = set()
+        self.invex = set()
+        self.networkname = ""
+        self.maxJtargets = 0
+
     def connect(self):
         if self.ssl:
             self.socket = ssl.wrap_socket(self.socket)
