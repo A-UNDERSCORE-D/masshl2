@@ -3,7 +3,14 @@ from connection import Connection
 from config import *
 import sys
 import signal
+from random import choice
 # TODO: NEEDS MOAR ASCII ART!
+
+exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
+         "expired and gone to meet its maker. THIS IS AN EX SOCKET!",
+         "\"VOOM\"!? This socket wouldn't \"voom\" if you put four million "
+         "volts through it!"
+         ]
 
 
 def run():
@@ -32,8 +39,7 @@ def run():
 
     while connection.connected:
         connection.read()
-    print("Socket Closed. This socket is no more, it has ceased to be."
-          " Its expired and gone to meet its maker. THIS IS AN EX SOCKET!",
+    print(choice(exits),
           file=sys.stderr)
 
 if __name__ == "__main__":
