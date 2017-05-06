@@ -12,7 +12,8 @@ config = {
     "admins": ["A_D!*@*"],
     "debug": True,
     "commands": ["JOIN ##ldtest"],
-    "cmdprefix": "~"
+    "cmdprefix": "~",
+    "channels": "#ADTEST"
 }
 
 if not os.path.exists("config.json"):

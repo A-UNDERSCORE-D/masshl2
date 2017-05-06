@@ -8,7 +8,7 @@ from handler import handler
 class Connection:
     def __init__(self, port, host, isssl, nsuser, nspass, nick, user,
                  commands=None, gecos="A_D's anti mass highlight bot",
-                 caps: set =None, debug: bool =False):
+                 caps: set =None, debug: bool =False, channels: list =None):
         self.port = port
         self.host = host
         self.ssl = isssl
@@ -28,6 +28,7 @@ class Connection:
         self.caps = caps or {"userhost-in-names", "sasl"}
         self.cansasl = False
         self.debug = debug
+        self.joinchannels = channels or []
         # Isupport stuff
 
         # adds or removes to a list, always has a parameter from the server

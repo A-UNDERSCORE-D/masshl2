@@ -87,10 +87,12 @@ def capdecrement(connection):
 
 
 def onendmotd(connection):
-    for command in connection.commands:
-        connection.write(command)
     if not connection.cansasl:
         identify(connection)
+    for command in connection.commands:
+        connection.write(command)
+    chans = ",".join(connection.joinchannels)
+    connection.write("JOIN " + chans)
 
 
 def identify(connection):

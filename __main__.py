@@ -27,7 +27,8 @@ def run():
         nsuser=config["nsident"],
         nspass=config["nspass"],
         commands=config["commands"],
-        debug=config["debug"]
+        debug=config["debug"],
+        channels=config["channels"]
     )
     connection.connect()
     original_handler = signal.getsignal(signal.SIGINT)
