@@ -1,7 +1,8 @@
+import base64
+
+from logger import *
 from user import User
 from channel import Channel
-import base64
-from logger import log, logall
 
 
 def handler(connection, prefix, command, args):
@@ -23,15 +24,16 @@ def handler(connection, prefix, command, args):
         onwelcome(connection)
     elif command == "353":
         onnames(connection, args)
+    elif command == "366":
+        onnamesend(connection, args)
     elif command == "904" or command == "903":
         capdecrement(connection)
 
 
 def sendauth(connection):
     connection.write("AUTHENTICATE {}".format(base64.b64encode(
-        (
-            connection.nick + "\00" + connection.nsuser + "\00" +
-            connection.nspass).encode()).decode()))
+        (connection.nick + "\00" + connection.nsuser + "\00" +
+         connection.nspass).encode()).decode()))
 
 
 def handlecap(connection, args):
@@ -92,13 +94,49 @@ def identify(connection):
     ))
 
 
+# :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang
+# :Cloud-9.A_DNet.net 366 Roy_Mustang #adtest :End of /NAMES list.
+
 def onnames(connection, args):
-    names = args[3:]
-    log(str(names))
+    names = args[3].split()
+    chan = connection.channels[args[2]]  # type: Channel
+
+    # clear out the current user list
+    if not chan.receivingnames:
+        chan.receivingnames = True
+        for user in chan.users:
+            usero = chan.users[user].user  # type: User
+            del usero.channels[chan.name]
+        chan.users = {}
+
     for mask in names:
         mask = mask.strip()
+        n, u = mask.split("!", 1)
+        u, h = u.split("@", 1)
+        admin, op, hop, voice = False, False, False, False
+        if n[0] in ["!", "@", "%", "+"]:
+            prefix = n[0]
+            n = n[1:]
+            if prefix == "!":
+                admin = True
+            elif prefix == "@":
+                op = True
+            elif prefix == "%":
+                hop = True
+            elif prefix == "+":
+                voice = True
+        if not connection.users.get(n):
+            user = User(n, u, h)
+            connection.users[n] = user
 
-        # if mask[0] == "@":
+        chan.adduser(connection, connection.users[n], isop=op, ishop=hop,
+                     isvoice=voice, isadmin=admin)
+
+
+def onnamesend(connection, args):
+    chan = connection.channels[args[1]]
+    chan.receivingnames = False
+    logchan(chan)
 
 
 def onjoin(connection, prefix, args):
