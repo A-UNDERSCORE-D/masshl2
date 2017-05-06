@@ -49,7 +49,7 @@ class Connection:
                     self.parse(data)
 
             except OSError as e:
-                log("Error: {error}.".format(error=e))
+                log("Error: {error}.".format(error=e), "error")
 
     def write(self, data):
         if isinstance(data, bytes):
