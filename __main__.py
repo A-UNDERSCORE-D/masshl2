@@ -9,7 +9,9 @@ from random import choice
 exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
          "expired and gone to meet its maker. THIS IS AN EX SOCKET!",
          "\"VOOM\"!? This socket wouldn't \"voom\" if you put four million "
-         "volts through it!"
+         "volts through it!",
+         "This socket does not know how not to be seen",
+         "Socket, will you stand up please"
          ]
 
 
@@ -24,7 +26,8 @@ def run():
         user=config["user"],
         nsuser=config["nsident"],
         nspass=config["nspass"],
-        commands=config["commands"]
+        commands=config["commands"],
+        debug=config["debug"]
     )
     connection.connect()
     original_handler = signal.getsignal(signal.SIGINT)
