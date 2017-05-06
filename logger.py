@@ -17,14 +17,14 @@ def log(data: str, ltype: str = "log"):
 
 
 def logall(connection):
-    log("-----------------------------CHANNELS----------------------------")
+    logcentered("CHANNELS")
     for channel in connection.channels:
         log(connection.channels[channel].name)
         for membership in connection.channels[channel].users:
             log("  `-" +
                 connection.channels[channel].users[membership].user.mask)
 
-    log("-----------------------------USERS-------------------------------")
+        logcentered("USERS")
     for user in connection.users:
         log(connection.users[user].mask)
         for channel in connection.users[user].channels:
@@ -32,9 +32,13 @@ def logall(connection):
 
 
 def logchan(channel):
-    log("------------------------USERS-ON-CHANNEL-------------------------")
+    logcentered("USERS-ON-{}".format(channel.name))
     log(channel.name)
     for user in channel.users:
         usero = channel.users[user]
         prefix = usero.prefix()
         log(" `-" + prefix + user)
+
+
+def logcentered(msg):
+    log("{:-^65}".format(msg))
