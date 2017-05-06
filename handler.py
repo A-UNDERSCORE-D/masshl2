@@ -3,6 +3,7 @@ import base64
 from logger import *
 from user import User
 from channel import Channel
+import fnmatch
 
 
 def handler(connection, prefix, command, args):
@@ -15,9 +16,9 @@ def handler(connection, prefix, command, args):
     elif command == "KICK":
         onkick(connection, args)
     elif command == "PRIVMSG":
-        onprivmsg(connection, args)
-    # elif command == "MODE":
-        # onmode(connection, args)
+        onprivmsg(connection, args, prefix)
+    elif command == "MODE":
+        onmode(connection, args)
 
     elif command == "CAP":
         handlecap(connection, args)
@@ -77,14 +78,12 @@ def handlecap(connection, args):
 
 def capincrement(connection):
     connection.capcount += 1
-    log("capcount = " + str(connection.capcount))
 
 
 def capdecrement(connection):
     connection.capcount -= 1
     if connection.capcount <= 0:
         connection.write("CAP END")
-    log("capcount = " + str(connection.capcount))
 
 
 def onendmotd(connection):
@@ -100,7 +99,7 @@ def identify(connection):
     ))
 
 
-def onprivmsg(connection, args):
+def onprivmsg(connection, args, prefix):
     msg = args[1]
     if msg == "~print":
         log("---------------MODES--------------------------")
@@ -109,6 +108,17 @@ def onprivmsg(connection, args):
         log("C: " + str(connection.Cmodes))
         log("D: " + str(connection.Dmodes))
         log("P: " + str(connection.Pmodes))
+    elif msg == "~die":
+        connection.write("QUIT :Controller requested disconnect")
+    # this is a fucking dumb idea
+    elif msg.startswith("~eval"):
+        if connection.debug:
+            if fnmatch.fnmatch(prefix, "*!*@snoonet/staff/A-D"):
+                try:
+                    eval(msg[5:])
+                except:
+                    log("that broke", "error")
+
 
 # :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang
 # :Cloud-9.A_DNet.net 366 Roy_Mustang #adtest :End of /NAMES list.
@@ -182,14 +192,14 @@ def onisupport(connection, args):
             pfx = token.split("=")[1]
             pfx, modes = pfx.split(")", 1)
             pfx = pfx[1:]
-            connection.Pmodes = dict(zip(pfx, modes))
-            connection.Bmodes.update(pfx)
+            connection.Pmoded = dict(zip(pfx, modes))
+            connection.Pmodes.update(pfx)
 
         elif "CHANMODES" in token:
             modes = token.split("=")[1]
             A, B, C, D = modes.split(",")
             connection.Amodes.update(A)
-            connection.Bmodes.update()
+            connection.Bmodes.update(B)
             connection.Cmodes.update(C)
             connection.Dmodes.update(D)
 
@@ -204,12 +214,48 @@ def onisupport(connection, args):
             connection.invex.add(mode)
 
 
+def onmode(connection, args):
+    target = args[0]
+    modes = args[1]
+    modeargs = args[2:]
+    log(modeargs)
+    adding = True
+    count = 0
+    if target == connection.nick:
+        return
+    chan = connection.channels[target]
+    for mode in modes:
+        if mode == "+":
+            adding = True
+            continue
+        elif mode == "-":
+            adding = False
+            continue
 
+        elif mode in connection.Amodes:
+            count += 1
+        elif mode in connection.Bmodes:
+            count += 1
+        elif mode in connection.Cmodes:
+            if adding:
+                count += 1
+        elif mode in connection.Dmodes:
+            pass
+        elif mode in connection.Pmodes:
+            nick = modeargs[count]
+            log(str(("+" if adding else "-") + mode + " " + nick))
+            membership = chan.users[nick]
 
-# def onmode(connection, args):
-#     target = args[0]
-#     modes = args[1]
-#     modeargs = args[2:]
+            if mode == "o":
+                membership.isop = adding
+            elif mode == "h":
+                membership.ishop = adding
+            elif mode == "v":
+                membership.isvoice = adding
+            elif mode == "Y":
+                membership.isadmin = adding
+            count += 1
+            logchan(chan)
 
 
 def onpart(connection, prefix, args):
