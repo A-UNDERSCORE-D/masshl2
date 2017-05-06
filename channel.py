@@ -17,20 +17,28 @@ class Channel:
         self.users = {}
         self.watched = watched
         self.hasmodes = None
+        self.receivingnames = False
 
     def __eq__(self, other: str) -> bool:
         return self.name.lower() == other.lower()
 
-    def adduser(self, connection, user: User):
+    def adduser(self, connection, user: User, isop: bool =False,
+            ishop: bool =False, isvoice: bool =False, isadmin: bool =False):
         """
         Adds a user to a channel, if the user exists in our list
 
         :param user: 
         :param connection:
+        :param isop: bool, sets whether the user is opped in the channel
+        :param ishop: bool, sets whether the user is hopped in the channel
+        :param isvoice: bool, sets whether the user is voiced in the channel
+        :param isadmin: bool, sets whether the user is marked as an admin 
+        in the channel
         :return: the membership object created
         """
         if connection.users.get(user.nick, None):
-            temp = Membership(self, user)
+            temp = Membership(self, user, isop=isop, ishop=ishop,
+                              isvoice=isvoice, isadmin=isadmin)
             self.users[user.nick] = temp
             user.channels[self.name] = temp
             return temp
