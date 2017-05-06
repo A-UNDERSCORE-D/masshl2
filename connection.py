@@ -8,7 +8,7 @@ from handler import handler
 class Connection:
     def __init__(self, port, host, isssl, nsuser, nspass, nick, user,
                  commands=None, gecos="A_D's anti mass highlight bot",
-                 caps: set =None):
+                 caps: set =None, debug: bool =False):
         self.port = port
         self.host = host
         self.ssl = isssl
@@ -27,7 +27,7 @@ class Connection:
         self.capcount = 0
         self.caps = caps or {"userhost-in-names", "sasl"}
         self.cansasl = False
-
+        self.debug = debug
         # Isupport stuff
 
         # adds or removes to a list, always has a parameter from the server
@@ -41,7 +41,8 @@ class Connection:
         # changes a setting on a channel, NEVER has a parameter
         self.Dmodes = set()
         # modes with prefixes, are essentially type B
-        self.Pmodes = {}
+        self.Pmodes = set()
+        self.Pmoded = {}
         self.banexept = set()
         self.invex = set()
         self.networkname = ""
