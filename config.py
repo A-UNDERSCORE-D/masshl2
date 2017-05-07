@@ -38,8 +38,11 @@ class Config(dict):
             self.update(json.load(f))
 
     def __getattr__(self, item):
-        print(str(self))
-        if item in self.config:
-            return self[item]
+        if item in self:
+            return self.get(item)
         else:
             raise AttributeError(item + " Not found")
+
+    def save(self, name):
+        with open(name) as f:
+            json.dump(self, f, indent=2)
