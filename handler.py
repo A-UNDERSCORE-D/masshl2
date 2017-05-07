@@ -3,7 +3,7 @@ import base64
 from logger import *
 from user import User
 from channel import Channel
-import fnmatch
+from commands import commands
 
 
 def handler(connection, prefix, command, args):
@@ -102,16 +102,7 @@ def identify(connection):
 
 
 def onprivmsg(connection, args, prefix):
-    msg = args[1]
-    if msg == "~print":
-        log("---------------MODES--------------------------")
-        log("A: " + str(connection.Amodes))
-        log("B: " + str(connection.Bmodes))
-        log("C: " + str(connection.Cmodes))
-        log("D: " + str(connection.Dmodes))
-        log("P: " + str(connection.Pmodes))
-    elif msg == "~die":
-        connection.write("QUIT :Controller requested disconnect")
+    commands(connection, args, prefix)
 
 
 # :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang
