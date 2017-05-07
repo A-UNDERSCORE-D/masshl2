@@ -8,18 +8,19 @@ from handler import handler
 class Connection:
     def __init__(self, config):
         self.port = config.port
-        self.host = config.host
-        self.ssl = config.isssl
+        self.host = config.network
+        self.ssl = config.SSL
         self.debug = config.debug
         self.joinchannels = config.channels or []
         self.nick = config.nick
         self.user = config.user
         self.gecos = config.gecos or ""
-        self.nsuser = config.nsuser
+        self.nsuser = config.nsident
         self.nspass = config.nspass
         self.commands = config.commands or [""]
-        self.caps = config.caps or {"userhost-in-names", "sasl"}
+        self.config = config
 
+        self.caps = {"userhost-in-names", "sasl"}
         self.socket = socket.socket()
         self.buffer = b""
         self.uhnames = False
