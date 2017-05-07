@@ -4,6 +4,7 @@ from config import Config
 import sys
 import signal
 from random import choice
+import time
 # TODO: NEEDS MOAR ASCII ART!
 
 exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
@@ -20,24 +21,13 @@ def run():
     print("By A_D")
     config = Config()
     connection = Connection(config=config)
-    # connection = Connection(
-    #     port=config["port"],
-    #     host=config["network"],
-    #     isssl=config["SSL"],
-    #     nick=config["nick"],
-    #     user=config["user"],
-    #     nsuser=config["nsident"],
-    #     nspass=config["nspass"],
-    #     commands=config["commands"],
-    #     debug=config["debug"],
-    #     channels=config["channels"]
-    # )
     connection.connect()
     original_handler = signal.getsignal(signal.SIGINT)
 
     # Called when we receive SIGINT, exits the connection gracefully
     def interrupted(signo, frame):
         connection.quit("Killed by user.")
+        time.sleep(1)
         connection.close()
         signal.signal(signal.SIGINT, original_handler)
 
