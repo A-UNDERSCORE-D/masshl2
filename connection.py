@@ -6,29 +6,28 @@ from handler import handler
 
 
 class Connection:
-    def __init__(self, port, host, isssl, nsuser, nspass, nick, user,
-                 commands=None, gecos="A_D's anti mass highlight bot",
-                 caps: set =None, debug: bool =False, channels: list =None):
-        self.port = port
-        self.host = host
-        self.ssl = isssl
+    def __init__(self, config):
+        self.port = config.port
+        self.host = config.host
+        self.ssl = config.isssl
+        self.debug = config.debug
+        self.joinchannels = config.channels or []
+        self.nick = config.nick
+        self.user = config.user
+        self.gecos = config.gecos or ""
+        self.nsuser = config.nsuser
+        self.nspass = config.nspass
+        self.commands = config.commands or [""]
+        self.caps = config.caps or {"userhost-in-names", "sasl"}
+
         self.socket = socket.socket()
         self.buffer = b""
         self.uhnames = False
-        self.nick = nick
-        self.user = user
-        self.gecos = gecos
-        self.nsuser = nsuser
-        self.nspass = nspass
         self.channels = {}
         self.users = {}
         self.connected = False
-        self.commands = commands or [""]
         self.capcount = 0
-        self.caps = caps or {"userhost-in-names", "sasl"}
         self.cansasl = False
-        self.debug = debug
-        self.joinchannels = channels or []
         # Isupport stuff
 
         # adds or removes to a list, always has a parameter from the server

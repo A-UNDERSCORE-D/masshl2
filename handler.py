@@ -112,14 +112,6 @@ def onprivmsg(connection, args, prefix):
         log("P: " + str(connection.Pmodes))
     elif msg == "~die":
         connection.write("QUIT :Controller requested disconnect")
-    # this is a fucking dumb idea
-    elif msg.startswith("~eval"):
-        if connection.debug:
-            if fnmatch.fnmatch(prefix, "*!*@snoonet/staff/A-D"):
-                try:
-                    eval(msg[5:])
-                except:
-                    log("that broke", "error")
 
 
 # :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang

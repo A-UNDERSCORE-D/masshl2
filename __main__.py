@@ -1,6 +1,6 @@
 # import irc
 from connection import Connection
-from config import *
+from config import Config
 import sys
 import signal
 from random import choice
@@ -18,18 +18,20 @@ exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
 def run():
     print("MASSHL 2.0")
     print("By A_D")
-    connection = Connection(
-        port=config["port"],
-        host=config["network"],
-        isssl=config["SSL"],
-        nick=config["nick"],
-        user=config["user"],
-        nsuser=config["nsident"],
-        nspass=config["nspass"],
-        commands=config["commands"],
-        debug=config["debug"],
-        channels=config["channels"]
-    )
+    config = Config()
+    connection = Connection(config=config)
+    # connection = Connection(
+    #     port=config["port"],
+    #     host=config["network"],
+    #     isssl=config["SSL"],
+    #     nick=config["nick"],
+    #     user=config["user"],
+    #     nsuser=config["nsident"],
+    #     nspass=config["nspass"],
+    #     commands=config["commands"],
+    #     debug=config["debug"],
+    #     channels=config["channels"]
+    # )
     connection.connect()
     original_handler = signal.getsignal(signal.SIGINT)
 
