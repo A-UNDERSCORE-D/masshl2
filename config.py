@@ -12,7 +12,7 @@ DEFAULT_CONFIG = {
             "nspass": "MHLPassword",
             "admins": ["A_D!*@*"],
             "debug": True,
-            "commands": ["JOIN ##ldtest"],
+            "commands": [],
             "cmdprefix": "~",
             "channels": "#ADTEST",
             "adminchan":
