@@ -2,23 +2,25 @@ import json
 import os.path
 import string
 DEFAULT_CONFIG = {
-            "networks": "irc.snoonet.org",
-            "port": 6697,
-            "SSL": True,
-            "user": "MHL2",
-            "nick": "MHL2",
-            "gecos": "A_D's anti mass highlight bot",
-            "nsident": "MHL",
-            "nspass": "MHLPassword",
-            "admins": ["A_D!*@*"],
-            "debug": True,
-            "commands": [],
-            "cmdprefix": "~",
-            "channels": "",
-            "adminchan":
-            "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence",
-            "global_nickignore": [l for l in string.ascii_lowercase],
-            "global_maskignore": ""
+            "snoonet": {
+                "network": "irc.snoonet.org",
+                "port": 6697,
+                "SSL": True,
+                "user": "MHL2",
+                "nick": "MHL2",
+                "gecos": "A_D's anti mass highlight bot",
+                "nsident": "MHL",
+                "nspass": "MHLPassword",
+                "admins": ["A_D!*@*"],
+                "debug": True,
+                "commands": [],
+                "cmdprefix": "~",
+                "channels": "",
+                "adminchan":
+                "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence",
+                "global_nickignore": [l for l in string.ascii_lowercase],
+                "global_maskignore": ""
+            }
         }
 
 

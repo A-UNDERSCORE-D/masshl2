@@ -1,10 +1,7 @@
-# import irc
 from bot import Bot
 import sys
 import signal
 from random import choice
-import time
-from selectors import DefaultSelector, EVENT_READ
 # TODO: NEEDS MOAR ASCII ART!
 
 exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
@@ -21,16 +18,14 @@ def run():
     print("By A_D")
     # config = Config()
     original_handler = signal.getsignal(signal.SIGINT)
-    selector = DefaultSelector()
     # connection = Connection(config=config, selector=selector)
-    bot = Bot(selector=selector)
+    bot = Bot()
     # connection.connect()
     # selector.register(connection, EVENT_READ)
 
     # Called when we receive SIGINT, exits the connection gracefully
     def interrupted(signo, frame):
         bot.stop("Killed by user.")
-        print(bot.selector.get_map().items())
         # bot.selector.close()
         signal.signal(signal.SIGINT, original_handler)
 
