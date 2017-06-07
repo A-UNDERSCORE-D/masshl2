@@ -1,19 +1,22 @@
 from connection import Connection
 from config import Config
 import time
+from selectors import DefaultSelector
 
 
 class Bot:
-    def __init__(self, selector):
+    def __init__(self):
         self.connections = []
-        self.selector = selector
+        self.selector = DefaultSelector()
         self.config = Config()
         self.running = False
 
     def run(self):
-        self.connections.append(Connection(config=self.config,
-                                           selector=self.selector,
-                                           bot=self))
+        for network in self.config["connections"]:
+            self.connections.append(Connection(
+                config=self.config["connections"][network],
+                selector=self.selector, bot=self, name=network,
+                debug=self.config["debug"]))
         for connection in self.connections:
             connection.connect()
 
@@ -23,10 +26,15 @@ class Bot:
             event = self.selector.select(1)
             for file, _ in event:
                 file.fileobj.read()
+        self.selector.close()
 
     def stop(self, reason):
         for connection in self.connections:
-            connection.quit(reason)
-            time.sleep(1)
-            connection.close()
+            if not connection.hasquit:
+                connection.quit(reason)
+        time.sleep(1)
+        for connection in self.connections:
+            if connection.connected:
+                connection.close()
+
         self.running = False
