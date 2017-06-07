@@ -6,23 +6,24 @@ from selectors import DefaultSelector, EVENT_READ
 
 
 class Connection:
-    def __init__(self, config, selector, bot):
-        self.port = config.port
-        self.host = config.network
-        self.ssl = config.SSL
-        self.debug = config.debug
-        self.joinchannels = config.channels or []
-        self.nick = config.nick
-        self.user = config.user
-        self.gecos = config.gecos or ""
-        self.nsuser = config.nsident
-        self.nspass = config.nspass
-        self.commands = config.commands
-        self.adminchan = config.adminchan
-        self.cmdprefix = config.cmdprefix
-        self.global_nickignore = config.global_nickignore
-        self.global_maskignore = config.global_maskignore
+    def __init__(self, config: dict, selector, bot, name, debug):
+        self.port = config["port"]
+        self.host = config["network"]
+        self.ssl = config["SSL"]
+        self.debug = debug
+        self.joinchannels = config["channels"]
+        self.nick = config["nick"]
+        self.user = config["user"]
+        self.gecos = config["gecos"]
+        self.nsuser = config["nsident"]
+        self.nspass = config["nspass"]
+        self.commands = config["commands"]
+        self.adminchan = config["adminchan"]
+        self.cmdprefix = config["cmdprefix"]
+        self.global_nickignore = config["global_nickignore"]
+        self.global_maskignore = config["global_maskignore"]
         self.bot = bot
+        self.name = name
 
         self.selector: DefaultSelector = selector
         self.caps = {"userhost-in-names", "sasl"}
@@ -32,6 +33,7 @@ class Connection:
         self.channels = {}
         self.users = {}
         self.connected = False
+        self.hasquit = False
         self.capcount = 0
         self.cansasl = False
         # Isupport stuff
@@ -81,17 +83,17 @@ class Connection:
     def write(self, data):
         if isinstance(data, bytes):
             self.socket.send(data + b"\r\n")
-            log(data.decode(), "ircout")
+            log(data.decode(), "ircout", self)
         else:
             self.socket.send((data + "\r\n").encode())
-            log(data, "ircout")
+            log(data, "ircout", self)
 
     def parse(self, data):
         self.buffer += data
         while b"\r\n" in self.buffer:
             raw, self.buffer = self.buffer.split(b"\r\n", 1)
             line = raw.decode()
-            log(line, "ircin")
+            log(line, "ircin", self)
             if line[0] == ":":
                 prefix, line = line.split(None, 1)
                 prefix = prefix[1:]
@@ -120,6 +122,7 @@ class Connection:
     def quit(self, message):
         self.write("QUIT :{msg}".format(msg=message))
         self.socket.shutdown(socket.SHUT_WR)
+        self.hasquit = True
 
     def close(self):
         self.selector.unregister(self)
