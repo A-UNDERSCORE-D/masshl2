@@ -1,12 +1,11 @@
 import socket
 import ssl
-import select
 from logger import log
 from handler import handler
 
 
 class Connection:
-    def __init__(self, config):
+    def __init__(self, config, selector):
         self.port = config.port
         self.host = config.network
         self.ssl = config.SSL
@@ -17,9 +16,15 @@ class Connection:
         self.gecos = config.gecos or ""
         self.nsuser = config.nsident
         self.nspass = config.nspass
-        self.commands = config.commands or [""]
+        self.commands = config.commands
+        self.adminchan = config.adminchan
+        self.cmdprefix = config.cmdprefix
+        self.global_nickignore = config.global_nickignore
+        self.global_maskignore = config.global_maskignore
+
         self.config = config
 
+        self.selector = selector
         self.caps = {"userhost-in-names", "sasl"}
         self.socket = socket.socket()
         self.buffer = b""
@@ -61,16 +66,16 @@ class Connection:
 
     def read(self):
         if self.connected:
-            try:
-                readable, _, _ = select.select([self.socket], [], [], 5)
-                if self.socket in readable:
-                    data = self.socket.recv(65535)
-                    if not data:
-                        self.close()
-                    self.parse(data)
-
-            except OSError as e:
-                log("Error: {error}.".format(error=e), "error")
+            # readable, _, _ = select.select([self.socket], [], [], 5)
+            # events = self.selector.select()
+            # for readable, _ in events:
+            #     if self.socket in readable:
+            #         print(type(readable))
+            data = self.socket.recv(65535)
+            if not data:
+                self.close()
+            else:
+                self.parse(data)
 
     def write(self, data):
         if isinstance(data, bytes):
@@ -102,9 +107,26 @@ class Connection:
                 i += 1
             handler(self, prefix, cmd, args)
 
+    def joinchans(self, channels):
+        chanstojoin: str = ""
+        if isinstance(channels, list):
+            chanstojoin = ",".join(channels)
+        elif isinstance(channels, str):
+            chanstojoin = channels
+        if chanstojoin:
+            self.write(f"JOIN {chanstojoin}")
+
     def quit(self, message):
         self.write("QUIT :{msg}".format(msg=message))
+        self.socket.shutdown(socket.SHUT_WR)
 
     def close(self):
+        self.selector.unregister(self)
         self.socket.close()
         self.connected = False
+
+    def fileno(self):
+        if self.socket:
+            return self.socket.fileno()
+        else:
+            return -1
