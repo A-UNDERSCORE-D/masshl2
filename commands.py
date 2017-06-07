@@ -4,7 +4,7 @@ from logger import *
 
 
 def printlog(connection, **kwargs):
-    logcentered("MODES")
+    logcentered("MODES", connection=connection)
     log("A: " + str(connection.Amodes))
     log("B: " + str(connection.Bmodes))
     log("C: " + str(connection.Cmodes))
@@ -17,7 +17,7 @@ def die(connection, **kwargs):
 
 
 def nickl(connection, channel, **kwargs):
-    logcentered("nicks")
+    logcentered("nicks", connection=connection)
     for nick in channel.nicklist:
         print(nick)
 
