@@ -4,8 +4,9 @@ from membership import Membership
 
 
 class Channel:
-    def __init__(self, name: str, count: int = 10, action: list = None,
-                 warn: int = 7, opchan: str = "", watched: bool = False):
+    def __init__(self, name: str, connection, count: int = 10,
+                 action: list = None, warn: int = 7, opchan: str = "",
+                 watched: bool = False):
 
         self.name = name if name[0] != ":" else name[1:]
         self.modes = ""
@@ -21,6 +22,7 @@ class Channel:
         self.nicklist = []
         self.nickignore = []
         self.maskignore = []
+        self.connection = connection
 
     def __eq__(self, other: str) -> bool:
         return self.name.lower() == other.lower()
