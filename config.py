@@ -1,8 +1,8 @@
 import json
 import os.path
-
+import string
 DEFAULT_CONFIG = {
-            "network": "",
+            "network": "irc.snoonet.org",
             "port": 6697,
             "SSL": True,
             "user": "MHL2",
@@ -14,9 +14,11 @@ DEFAULT_CONFIG = {
             "debug": True,
             "commands": [],
             "cmdprefix": "~",
-            "channels": "#ADTEST",
+            "channels": "",
             "adminchan":
-            "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence"
+            "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence",
+            "global_nickignore": [l for l in string.ascii_lowercase],
+            "global_maskignore": ""
         }
 
 
