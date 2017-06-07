@@ -2,6 +2,7 @@ import json
 import os.path
 import string
 DEFAULT_CONFIG = {
+        "connections": {
             "snoonet": {
                 "network": "irc.snoonet.org",
                 "port": 6697,
@@ -12,7 +13,6 @@ DEFAULT_CONFIG = {
                 "nsident": "MHL",
                 "nspass": "MHLPassword",
                 "admins": ["A_D!*@*"],
-                "debug": True,
                 "commands": [],
                 "cmdprefix": "~",
                 "channels": "",
@@ -20,8 +20,11 @@ DEFAULT_CONFIG = {
                 "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence",
                 "global_nickignore": [l for l in string.ascii_lowercase],
                 "global_maskignore": ""
-            }
-        }
+            },
+        },
+
+        "debug": True,
+    }
 
 
 class Config(dict):
@@ -40,12 +43,6 @@ class Config(dict):
 
         with open(name + ".json") as f:
             self.update(json.load(f))
-
-    def __getattr__(self, item):
-        if item in self:
-            return self.get(item)
-        else:
-            raise AttributeError(item + " Not found")
 
     def save(self, name):
         with open(name) as f:
