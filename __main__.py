@@ -1,6 +1,5 @@
 # import irc
-from connection import Connection
-from config import Config
+from bot import Bot
 import sys
 import signal
 from random import choice
@@ -20,28 +19,25 @@ exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
 def run():
     print("MASSHL 2.0")
     print("By A_D")
-    config = Config()
+    # config = Config()
     original_handler = signal.getsignal(signal.SIGINT)
     selector = DefaultSelector()
-    connection = Connection(config=config, selector=selector)
-    connection.connect()
-    selector.register(connection, EVENT_READ)
+    # connection = Connection(config=config, selector=selector)
+    bot = Bot(selector=selector)
+    # connection.connect()
+    # selector.register(connection, EVENT_READ)
 
     # Called when we receive SIGINT, exits the connection gracefully
     def interrupted(signo, frame):
-        connection.quit("Killed by user.")
-        time.sleep(1)
-        connection.close()
+        bot.stop("Killed by user.")
+        print(bot.selector.get_map().items())
+        # bot.selector.close()
         signal.signal(signal.SIGINT, original_handler)
 
     signal.signal(signal.SIGINT, interrupted)
 
-    while connection.connected:
-        events = selector.select(1)
-        for sock, _ in events:
-            sock.fileobj.read()
-    print(choice(exits),
-          file=sys.stderr)
+    bot.run()
+    print(choice(exits), file=sys.stderr)
 
 if __name__ == "__main__":
     run()

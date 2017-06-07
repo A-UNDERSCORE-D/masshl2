@@ -21,10 +21,16 @@ def nickl(connection, channel, **kwargs):
     for nick in channel.nicklist:
         print(nick)
 
+
+def stop(connection, **kwargs):
+    connection.bot.stop("Controller requested disconnect")
+
+
 commands = {
     "die": die,
     "print": printlog,
-    "nickl": nickl
+    "nickl": nickl,
+    "stop": stop
 }
 
 

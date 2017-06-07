@@ -2,7 +2,7 @@ import json
 import os.path
 import string
 DEFAULT_CONFIG = {
-            "network": "irc.snoonet.org",
+            "networks": "irc.snoonet.org",
             "port": 6697,
             "SSL": True,
             "user": "MHL2",

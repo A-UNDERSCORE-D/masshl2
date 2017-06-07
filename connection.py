@@ -2,10 +2,11 @@ import socket
 import ssl
 from logger import log
 from handler import handler
+from selectors import DefaultSelector, EVENT_READ
 
 
 class Connection:
-    def __init__(self, config, selector):
+    def __init__(self, config, selector, bot):
         self.port = config.port
         self.host = config.network
         self.ssl = config.SSL
@@ -21,10 +22,9 @@ class Connection:
         self.cmdprefix = config.cmdprefix
         self.global_nickignore = config.global_nickignore
         self.global_maskignore = config.global_maskignore
+        self.bot = bot
 
-        self.config = config
-
-        self.selector = selector
+        self.selector: DefaultSelector = selector
         self.caps = {"userhost-in-names", "sasl"}
         self.socket = socket.socket()
         self.buffer = b""
@@ -59,6 +59,7 @@ class Connection:
             self.socket = ssl.wrap_socket(self.socket)
         self.socket.connect((self.host, self.port))
         self.connected = True
+        self.selector.register(self, EVENT_READ)
         self.write("CAP LS")
         self.write("NICK {nick}".format(nick=self.nick))
         self.write("USER {user} * * :{gecos}".format(user=self.user,
