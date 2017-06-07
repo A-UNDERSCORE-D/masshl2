@@ -3,7 +3,9 @@ import base64
 from logger import *
 from user import User
 from channel import Channel
-from commands import commands
+from commands import on_command
+
+# TODO: CTCP responses
 
 
 def handler(connection, prefix, command, args):
@@ -91,8 +93,8 @@ def onendmotd(connection):
         identify(connection)
     for command in connection.commands:
         connection.write(command)
-    chans = ",".join(connection.joinchannels)
-    connection.write("JOIN " + chans)
+    connection.joinchans(connection.adminchan)
+    connection.joinchans(connection.joinchannels)
 
 
 def identify(connection):
@@ -102,7 +104,10 @@ def identify(connection):
 
 
 def onprivmsg(connection, args, prefix):
-    commands(connection, args, prefix)
+    if args[1].startswith(connection.cmdprefix):
+        on_command(connection, args, prefix)
+    else:
+        pass
 
 
 # :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang
@@ -111,13 +116,13 @@ def onprivmsg(connection, args, prefix):
 
 def onnames(connection, args):
     names = args[3].split()
-    chan = connection.channels[args[2]]  # type: Channel
+    chan: Channel = connection.channels[args[2]]
 
     # clear out the current user list
     if not chan.receivingnames:
         chan.receivingnames = True
         for user in chan.users:
-            usero = chan.users[user].user  # type: User
+            usero: User = chan.users[user].user
             del usero.channels[chan.name]
         chan.users = {}
 
@@ -203,7 +208,6 @@ def onmode(connection, args):
     target = args[0]
     modes = args[1]
     modeargs = args[2:]
-    log(modeargs)
     adding = True
     count = 0
     if target == connection.nick:
