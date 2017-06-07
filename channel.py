@@ -18,6 +18,9 @@ class Channel:
         self.watched = watched
         self.hasmodes = None
         self.receivingnames = False
+        self.nicklist = []
+        self.nickignore = []
+        self.maskignore = []
 
     def __eq__(self, other: str) -> bool:
         return self.name.lower() == other.lower()
@@ -34,13 +37,14 @@ class Channel:
         :param isvoice: bool, sets whether the user is voiced in the channel
         :param isadmin: bool, sets whether the user is marked as an admin 
         in the channel
-        :return: the membership object created
+        :return: Membership, the membership object created
         """
         if connection.users.get(user.nick, None):
             temp = Membership(self, user, isop=isop, ishop=ishop,
                               isvoice=isvoice, isadmin=isadmin)
             self.users[user.nick] = temp
             user.channels[self.name] = temp
+            self.nicklist.append(user.nick.lower())
             return temp
         else:
             raise ValueError("Unknown User")
@@ -58,6 +62,7 @@ class Channel:
             if self.users.get(user.nick):
                 del self.users[user.nick]
                 del user.channels[self.name]
+                self.nicklist.remove(user.nick.lower())
                 if len(user.channels) == 0:
                     del connection.users[user.nick]
         else:
