@@ -6,6 +6,7 @@ from channel import Channel
 from commands import on_command
 
 # TODO: CTCP responses
+# TODO: on nick function
 
 
 def handler(connection, prefix, command, args):
@@ -162,7 +163,7 @@ def onjoin(connection, prefix, args):
     user = connection.users.get(nick)
     name = args[0]
     if not chan:
-        connection.channels[name] = Channel(name)
+        connection.channels[name] = Channel(name, connection)
     if not user:
         User.add(connection, prefix)
     if not connection.channels[name].users.get(nick):
@@ -245,6 +246,8 @@ def onmode(connection, args):
                 membership.isadmin = adding
             count += 1
             logchan(chan)
+
+# TODO: Deal with parts/kicks for myself
 
 
 def onpart(connection, prefix, args):
