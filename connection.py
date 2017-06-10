@@ -110,7 +110,7 @@ class Connection:
                 i += 1
             handler(self, prefix, cmd, args)
 
-    def joinchans(self, channels):
+    def join(self, channels):
         chanstojoin: str = ""
         if isinstance(channels, list):
             chanstojoin = ",".join(channels)
@@ -118,6 +118,15 @@ class Connection:
             chanstojoin = channels
         if chanstojoin:
             self.write(f"JOIN {chanstojoin}")
+
+    def part(self, channels):
+        chanstopart: str = ""
+        if isinstance(channels, list):
+            chanstopart = ",".join(channels)
+        elif isinstance(channels, str):
+            chanstopart = channels
+        if chanstopart:
+            self.write(f"PART {chanstopart}")
 
     def quit(self, message):
         self.write("QUIT :{msg}".format(msg=message))

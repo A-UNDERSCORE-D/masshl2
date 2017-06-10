@@ -26,17 +26,33 @@ def stop(connection, **kwargs):
     connection.bot.stop("Controller requested disconnect")
 
 
+def join(connection, cmdargs, **kwargs):
+    connection.join(cmdargs)
+
+
+def part(connection, cmdargs, **kwargs):
+    connection.part(cmdargs)
+
 commands = {
     "die": die,
     "print": printlog,
     "nickl": nickl,
-    "stop": stop
+    "stop": stop,
+    "join": join,
+    "part": part
 }
 
 
 def on_command(connection, args, prefix):
-    command: str = args[1][1:]
+    temp = args[1][1:].split(None, 1)
+    command = temp.pop(0)
+    cmdargs = ""
+    if temp:
+        cmdargs = temp.pop(0)
+
     if command in commands:
         channel = connection.channels.get(args[0])
-        commands[command](connection=connection, channel=channel)
+        commands[command](connection=connection,
+                          channel=channel,
+                          cmdargs=cmdargs)
 

@@ -70,3 +70,17 @@ class Channel:
         else:
             # raise ValueError("Unknown user")
             log("Got a part for an unknown user! WTF?")
+
+    def cleanup(self):
+        log("cleanup called")
+        userlist = []
+        for user in self.users:
+            log("collecting users")
+            usero = self.users[user].user
+            userlist.append(usero)
+        log(str(userlist))
+        for user in userlist:
+            log(f"removing user: {user.nick}")
+            self.deluser(self.connection, user)
+        log("deleting self")
+        del self.connection.channels[self.name]

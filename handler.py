@@ -94,8 +94,8 @@ def onendmotd(connection):
         identify(connection)
     for command in connection.commands:
         connection.write(command)
-    connection.joinchans(connection.adminchan)
-    connection.joinchans(connection.joinchannels)
+    connection.join(connection.adminchan)
+    connection.join(connection.joinchannels)
 
 
 def identify(connection):
@@ -251,13 +251,18 @@ def onmode(connection, args):
 
 
 def onpart(connection, prefix, args):
-    chan = connection.channels.get(args[0], None)
-    user = connection.users.get(prefix.split("!")[0], None)
+    chan: Channel = connection.channels.get(args[0], None)
+    user: User = connection.users.get(prefix.split("!")[0], None)
     if not chan:
         log("WTF? I just got a part for a channel I dont have, "
             "channel was {c}".format(c=args))
         logall(connection)
-    chan.deluser(connection, user)
+
+    if user.nick == connection.nick:
+        chan.cleanup()
+        log(connection.channels)
+    else:
+        chan.deluser(connection, user)
     logall(connection)
 
 
