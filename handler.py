@@ -110,8 +110,6 @@ def identify(connection):
 def onprivmsg(connection, args, prefix):
     if args[1].startswith(connection.cmdprefix):
         on_command(connection, args, prefix)
-    else:
-        pass
 
 
 # :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang
@@ -132,12 +130,9 @@ def onnames(connection, args):
 
     for mask in names:
         mask = mask.strip()
-        n, u = mask.split("!", 1)
-        u, h = u.split("@", 1)
-        admin, op, hop, voice = False, False, False, False
-        if n[0] in ["!", "@", "%", "+"]:
-            prefix = n[0]
-            n = n[1:]
+        if mask[0] in ["!", "@", "%", "+"]:
+            prefix = mask[0]
+            mask = mask[1:]
             if prefix == "!":
                 admin = True
             elif prefix == "@":
@@ -146,11 +141,10 @@ def onnames(connection, args):
                 hop = True
             elif prefix == "+":
                 voice = True
-        if not connection.users.get(n):
-            user = User(n, u, h)
-            connection.users[n] = user
+        admin, op, hop, voice = False, False, False, False
+        temp = User.add(connection, mask)
 
-        chan.adduser(connection, connection.users[n], isop=op, ishop=hop,
+        chan.adduser(connection, temp, isop=op, ishop=hop,
                      isvoice=voice, isadmin=admin)
 
 
