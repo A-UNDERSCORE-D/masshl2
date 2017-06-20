@@ -1,4 +1,5 @@
 import base64
+import inspect
 
 from logger import *
 from user import User
@@ -8,38 +9,43 @@ from commands import on_command
 # TODO: CTCP responses
 # TODO: on nick function
 
+HANDLERS = {}
+
+
+def raw(*cmds):
+    def _decorate(func):
+        for cmd in cmds:
+            HANDLERS.setdefault(cmd.upper(), []).append(func)
+        return func
+    return _decorate
+
 
 def handler(connection, prefix, command, args):
-    if command == "PING":
-        connection.write("PONG :" + " ".join(args))
-    elif command == "JOIN":
-        onjoin(connection, prefix, args)
-    elif command == "PART":
-        onpart(connection, prefix, args)
-    elif command == "KICK":
-        onkick(connection, args)
-    elif command == "PRIVMSG":
-        onprivmsg(connection, args, prefix)
-    elif command == "MODE":
-        onmode(connection, args)
-
-    elif command == "CAP":
-        handlecap(connection, args)
-    elif command == "AUTHENTICATE":
-        sendauth(connection)
-
-    elif command == "376":
-        onendmotd(connection)
-    elif command == "005":
-        onisupport(connection, args)
-    elif command == "353":
-        onnames(connection, args)
-    elif command == "366":
-        onnamesend(connection, args)
-    elif command == "904" or command == "903":
-        capdecrement(connection)
+    data = {
+        "connection": connection,
+        "prefix": prefix,
+        "command": command,
+        "args": args,
+    }
+    for func in HANDLERS.get(command, []):
+        _internal_launch(func, data)
 
 
+def _internal_launch(func, data):
+    sig = inspect.signature(func)
+    params = []
+    for arg in sig.parameters.keys():
+        assert arg in data
+        params.append(data[arg])
+    func(*params)
+
+
+@raw("PING")
+def onping(connection, args):
+    connection.write("PONG :" + " ".join(args))
+
+
+@raw("AUTHENTICATE")
 def sendauth(connection):
     auth_string = (connection.nick + "\00" + connection.nsuser + "\00"
                    + connection.nspass).encode()
@@ -49,6 +55,7 @@ def sendauth(connection):
     )
 
 
+@raw("CAP")
 def handlecap(connection, args):
     command = args[1]
     if command == "LS":
@@ -86,12 +93,14 @@ def capincrement(connection):
     connection.capcount += 1
 
 
+@raw("903", "904")
 def capdecrement(connection):
     connection.capcount -= 1
     if connection.capcount <= 0:
         connection.write("CAP END")
 
 
+@raw("376")
 def onendmotd(connection):
     if not connection.cansasl:
         identify(connection)
@@ -107,6 +116,7 @@ def identify(connection):
     ))
 
 
+@raw("PRIVMSG")
 def onprivmsg(connection, args, prefix):
     if args[1].startswith(connection.cmdprefix):
         on_command(connection, args, prefix)
@@ -116,6 +126,7 @@ def onprivmsg(connection, args, prefix):
 # :Cloud-9.A_DNet.net 366 Roy_Mustang #adtest :End of /NAMES list.
 
 
+@raw("353")
 def onnames(connection, args):
     names = args[3].split()
     chan: Channel = connection.channels[args[2]]
@@ -148,12 +159,14 @@ def onnames(connection, args):
                      isvoice=voice, isadmin=admin)
 
 
+@raw("366")
 def onnamesend(connection, args):
     chan = connection.channels[args[1]]
     chan.receivingnames = False
     logchan(chan)
 
 
+@raw("JOIN")
 def onjoin(connection, prefix, args):
     chan = connection.channels.get(args[0])
     nick = prefix.split("!")[0]
@@ -172,6 +185,7 @@ def onjoin(connection, prefix, args):
     logall(connection)
 
 
+@raw("005")
 def onisupport(connection, args):
     tokens = args[1:-1]
     for token in tokens:
@@ -204,6 +218,7 @@ def onisupport(connection, args):
             connection.invex.add(mode)
 
 
+@raw("MODE")
 def onmode(connection, args):
     target = args[0]
     modes = args[1]
@@ -248,6 +263,7 @@ def onmode(connection, args):
 # TODO: Deal with parts/kicks for myself
 
 
+@raw("PART")
 def onpart(connection, prefix, args):
     chan: Channel = connection.channels.get(args[0], None)
     user: User = connection.users.get(prefix.split("!")[0], None)
@@ -264,9 +280,11 @@ def onpart(connection, prefix, args):
     logall(connection)
 
 
+@raw("KICK")
 def onkick(connection, args):
     user = connection.users.get(args[1], None)
     chan = connection.channels.get((args[0]), None)
     if user and chan:
         chan.deluser(connection, user)
     logall(connection)
+
