@@ -9,7 +9,7 @@ class Connection:
     def __init__(self, config: dict, selector, bot, name, debug):
         self.port = config["port"]
         self.host = config["network"]
-        self.ssl = config["SSL"]
+        self.is_ssl = config["SSL"]
         self.debug = debug
         self.joinchannels = config["channels"]
         self.nick = config["nick"]
@@ -57,7 +57,7 @@ class Connection:
         self.maxJtargets = 0
 
     def connect(self):
-        if self.ssl:
+        if self.is_ssl:
             self.socket = ssl.wrap_socket(self.socket)
         self.socket.connect((self.host, self.port))
         self.connected = True
