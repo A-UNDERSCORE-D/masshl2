@@ -13,10 +13,13 @@ class Bot:
 
     def run(self):
         for network in self.config["connections"]:
-            self.connections.append(Connection(
+            temp_connection = Connection(
                 config=self.config["connections"][network],
                 selector=self.selector, bot=self, name=network,
-                debug=self.config["debug"]))
+                debug=self.config["debug"]
+            )
+            self.connections.append(temp_connection)
+
         for connection in self.connections:
             connection.connect()
 
