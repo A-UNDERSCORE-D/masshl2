@@ -18,7 +18,7 @@ def die(connection, **kwargs):
 
 def nickl(connection, channel, **kwargs):
     logcentered("nicks", connection=connection)
-    for nick in channel.nicklist:
+    for nick in channel.users.keys():
         print(nick)
 
 
@@ -55,4 +55,3 @@ def on_command(connection, args, prefix):
         commands[command](connection=connection,
                           channel=channel,
                           cmdargs=cmdargs)
-

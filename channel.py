@@ -19,7 +19,6 @@ class Channel:
         self.watched = watched
         self.hasmodes = None
         self.receivingnames = False
-        self.nicklist = []
         self.nickignore = []
         self.maskignore = []
         self.connection = connection
@@ -46,7 +45,6 @@ class Channel:
                               isvoice=isvoice, isadmin=isadmin)
             self.users[user.nick] = temp
             user.channels[self.name] = temp
-            self.nicklist.append(user.nick.lower())
             return temp
         else:
             raise ValueError("Unknown User")
@@ -64,7 +62,6 @@ class Channel:
             if self.users.get(user.nick):
                 del self.users[user.nick]
                 del user.channels[self.name]
-                self.nicklist.remove(user.nick.lower())
                 if len(user.channels) == 0:
                     del connection.users[user.nick]
         else:
