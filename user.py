@@ -15,5 +15,9 @@ class User:
     def add(connection, mask):
         n, u = mask.split("!", 1)
         u, h = u.split("@", 1)
-        temp = User(n, u, h)
-        connection.users[temp.nick] = temp
+        if not connection.users.get(u):
+            temp = User(n, u, h)
+            connection.users[temp.nick] = temp
+            return temp
+        else:
+            return connection.users[u]
