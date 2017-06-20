@@ -41,9 +41,12 @@ def handler(connection, prefix, command, args):
 
 
 def sendauth(connection):
-    connection.write("AUTHENTICATE {}".format(base64.b64encode(
-        (connection.nick + "\00" + connection.nsuser + "\00" +
-         connection.nspass).encode()).decode()))
+    auth_string = (connection.nick + "\00" + connection.nsuser + "\00"
+                   + connection.nspass).encode()
+
+    connection.write("AUTHENTICATE {}".format(
+        base64.b64encode(auth_string).decode())
+    )
 
 
 def handlecap(connection, args):
@@ -164,8 +167,10 @@ def onjoin(connection, prefix, args):
     name = args[0]
     if not chan:
         connection.channels[name] = Channel(name, connection)
+
     if not user:
         User.add(connection, prefix)
+
     if not connection.channels[name].users.get(nick):
         chan = connection.channels[name]
         user = connection.users[nick]
@@ -221,7 +226,6 @@ def onmode(connection, args):
         elif mode == "-":
             adding = False
             continue
-
         elif mode in connection.Amodes:
             count += 1
         elif mode in connection.Bmodes:
