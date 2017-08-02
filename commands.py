@@ -13,17 +13,18 @@ def command(*cmds):
             assert cmd not in COMMANDS
             COMMANDS[cmd] = func
         return func
+
     return _decorate
 
 
 @command("print")
 def printlog(connection):
     logcentered("MODES", connection=connection)
-    log("A: " + str(connection.Amodes))
-    log("B: " + str(connection.Bmodes))
-    log("C: " + str(connection.Cmodes))
-    log("D: " + str(connection.Dmodes))
-    log("P: " + str(connection.Pmodes))
+    log("A: " + str(connection.a_modes))
+    log("B: " + str(connection.b_modes))
+    log("C: " + str(connection.c_modes))
+    log("D: " + str(connection.d_modes))
+    log("P: " + str(connection.p_modes))
 
 
 @command("die")
@@ -55,13 +56,13 @@ def part(connection, cmdargs):
 
 def on_command(connection, args, prefix):
     temp = args[1][1:].split(None, 1)
-    command = temp.pop(0)
+    cmd = temp.pop(0)
     cmdargs = ""
     if temp:
         cmdargs = temp.pop(0)
 
-    handler = COMMANDS.get(command)
-    if handler:
+    handler = COMMANDS.get(cmd)
+    if handler and callable(handler):
         sig = inspect.signature(handler)
         channel = connection.channels.get(args[0])
         data = {
@@ -71,4 +72,3 @@ def on_command(connection, args, prefix):
         }
         args = [data[arg] for arg in sig.parameters.keys()]
         handler(*args)
-
