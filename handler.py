@@ -176,7 +176,8 @@ def onnames(connection, args):
 
     for mask in names:
         mask = mask.strip()
-        if mask[0] in ["!", "@", "%", "+"]:
+        admin, op, hop, voice = False, False, False, False
+        if mask[0] in "!@%+":
             prefix = mask[0]
             mask = mask[1:]
             if prefix == "!":
@@ -187,7 +188,6 @@ def onnames(connection, args):
                 hop = True
             elif prefix == "+":
                 voice = True
-        admin, op, hop, voice = False, False, False, False
         temp = User.add(connection, mask)
 
         chan.adduser(connection, temp, isop=op, ishop=hop,
