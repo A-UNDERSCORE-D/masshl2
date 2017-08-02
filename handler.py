@@ -151,7 +151,6 @@ def onisupport(connection, args):
             connection.invex.add(mode)
 
 
-
 @raw("376")
 def onendmotd(connection):
     if not connection.cansasl:
@@ -170,10 +169,10 @@ def onnames(connection, args):
     # clear out the current user list
     if not chan.receivingnames:
         chan.receivingnames = True
-        for user in chan.users:
-            usero: User = chan.users[user].user
-            del usero.channels[chan.name]
-        chan.users = {}
+        for user in chan.memberships:
+            usero: User = chan.memberships[user].user
+            del usero.memberships[chan.name]
+        chan.memberships = {}
 
     for mask in names:
         mask = mask.strip()
@@ -214,7 +213,7 @@ def onjoin(connection, prefix, args):
     if not user:
         User.add(connection, prefix)
 
-    if not connection.channels[name].users.get(nick):
+    if not connection.channels[name].memberships.get(nick):
         chan = connection.channels[name]
         user = connection.users[nick]
         chan.adduser(connection, user)
@@ -303,4 +302,17 @@ def onkick(connection, args):
             log(connection.channels)
         else:
             chan.deluser(connection, user)
+    logall(connection)
+
+
+@raw("NICK")
+def onnick(connection, prefix, args):
+    if not prefix:
+        raise ValueError
+    onick = prefix.split("!")[0]
+    nnick = args[0]
+    if onick == connection.nick:
+        connection.nick = nnick
+    user = connection.users.get(onick)
+    user.renick(nnick)
     logall(connection)

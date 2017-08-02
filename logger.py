@@ -32,23 +32,23 @@ def logall(connection):
     logcentered("CHANNELS", connection=connection)
     for channel in connection.channels:
         log(connection.channels[channel].name, connection=connection)
-        for membership in connection.channels[channel].users:
+        for membership in connection.channels[channel].memberships:
             log("  `-" +
-                connection.channels[channel].users[membership].user.mask,
+                connection.channels[channel].memberships[membership].user.mask,
                 connection=connection)
 
         logcentered("USERS", connection=connection)
     for user in connection.users:
         log(connection.users[user].mask, connection=connection)
-        for channel in connection.users[user].channels:
+        for channel in connection.users[user].memberships:
             log("  `-" + channel, connection=connection)
 
 
 def logchan(channel):
     logcentered("USERS-ON-{}".format(channel.name), channel.connection)
     log(channel.name, connection=channel.connection)
-    for user in channel.users:
-        usero = channel.users[user]
+    for user in channel.memberships:
+        usero = channel.memberships[user]
         prefix = usero.prefix()
         log(" `-" + prefix + user, connection=channel.connection)
 

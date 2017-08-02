@@ -15,7 +15,7 @@ class Channel:
                                              "KICK {chan} {nick}"]
         self.warn = warn
         self.opchan = opchan
-        self.users = {}
+        self.memberships = {}
         self.watched = watched
         self.hasmodes = None
         self.receivingnames = False
@@ -44,8 +44,8 @@ class Channel:
         if connection.users.get(user.nick, None):
             temp = Membership(self, user, isop=isop, ishop=ishop,
                               isvoice=isvoice, isadmin=isadmin)
-            self.users[user.nick] = temp
-            user.channels[self.name] = temp
+            self.memberships[user.nick] = temp
+            user.memberships[self.name] = temp
             return temp
         else:
             raise ValueError("Unknown User")
@@ -60,10 +60,10 @@ class Channel:
         :return: 
         """
         if user and connection.users.get(user.nick, None):
-            if self.users.get(user.nick):
-                del self.users[user.nick]
-                del user.channels[self.name]
-                if len(user.channels) == 0:
+            if self.memberships.get(user.nick):
+                del self.memberships[user.nick]
+                del user.memberships[self.name]
+                if len(user.memberships) == 0:
                     del connection.users[user.nick]
         else:
             # raise ValueError("Unknown user")
@@ -72,9 +72,9 @@ class Channel:
     def cleanup(self):
         log("cleanup called")
         userlist = []
-        for user in self.users:
+        for user in self.memberships:
             log("collecting users", connection=self.connection)
-            usero = self.users[user].user
+            usero = self.memberships[user].user
             userlist.append(usero)
         log(str(userlist), connection=self.connection)
         for user in userlist:
