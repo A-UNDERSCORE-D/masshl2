@@ -1,10 +1,10 @@
 import base64
 import inspect
 
-from logger import *
-from user import User
 from channel import Channel
 from commands import on_command
+from logger import *
+from user import User
 
 # TODO: CTCP responses
 # TODO: on nick function
@@ -185,8 +185,8 @@ def onnames(connection, args):
                 hop = True
             elif prefix == "+":
                 voice = True
-        temp = User.add(connection, mask)
 
+        temp = connection.get_user(mask)
         chan.adduser(connection, temp, isop=op, ishop=hop,
                      isvoice=voice, isadmin=admin)
 
@@ -207,10 +207,7 @@ def onjoin(connection, prefix, args):
         chan = Channel(name, connection)
         connection.channels[name] = chan
 
-    try:
-        user = connection.users[nick]
-    except KeyError:
-        user = User.add(connection, prefix)
+    user = connection.get_user(prefix)
 
     if nick not in chan.memberships:
         chan.adduser(connection, user)
@@ -271,12 +268,20 @@ def onmode(connection, args):
 
 @raw("PART")
 def onpart(connection, prefix, args):
-    chan: Channel = connection.channels.get(args[0])
-    user: User = connection.users.get(prefix.split("!")[0])
-    if not chan:
+    chan_name = args[0]
+    try:
+        chan = connection.channels[chan_name]
+    except KeyError:
         log("WTF? I just got a part for a channel I dont have, "
-            "channel was {c}".format(c=args))
+            "channel was {c}".format(c=chan_name))
         logall(connection)
+        return
+
+    nick = prefix.split("!")[0]
+    try:
+        user = chan.get_user(nick)
+    except KeyError:
+        log("Received part for non-existent user '{}' from channel '{}'".format(nick, chan.name))
         return
 
     if user.nick == connection.nick:
@@ -328,3 +333,15 @@ def onnick(connection, prefix, args):
         return
     user.renick(nnick)
     logall(connection)
+
+
+@raw("QUIT")
+def onquit(connection, prefix):
+    nick = prefix.split("!")[0]
+    try:
+        user = connection.users[nick]
+    except KeyError:
+        log("Received quit from non-existent user '{}'".format(prefix))
+        return
+
+    connection.del_user(user)

@@ -12,7 +12,7 @@ class Membership:
         self.user = user
         self.last_ping = 0
 
-    def prefix(self):
+    def prefix(self) -> str:
         if self.isadmin:
             return "!"
         elif self.isop:

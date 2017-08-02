@@ -1,14 +1,15 @@
 import weakref
+from typing import TYPE_CHECKING
 from weakref import WeakValueDictionary
 
 from logger import log
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    import channel
+    from connection import Connection
 
 
 class User:
-    def __init__(self, nick: str, user: str, host: str, connection):
+    def __init__(self, nick: str, user: str, host: str, connection: 'Connection'):
         self.nick = nick
         self.user = user
         self.host = host
@@ -16,15 +17,19 @@ class User:
         self.connection = weakref.proxy(connection)
 
     def __eq__(self, other) -> bool:
-        if type(other) == User:
+        if isinstance(other, User):
             other = other.nick
-        return self.nick.lower() == other.lower()
+
+        if isinstance(other, str):
+            return self.nick.lower() == other.lower()
+
+        return NotImplemented
 
     @property
-    def mask(self):
+    def mask(self) -> str:
         return self.nick + "!" + self.user + "@" + self.host
 
-    def renick(self, newnick):
+    def renick(self, newnick: str):
         log("Running renick", connection=self.connection)
         for name, membership in self.memberships.items():
             log(f"Checking memberships: {membership}", connection=self.connection)
@@ -32,14 +37,3 @@ class User:
             membership.channel.memberships[newnick] = me
         self.connection.users[newnick] = self.connection.users.pop(self.nick)
         self.nick = newnick
-
-    @staticmethod
-    def add(connection, mask):
-        nick, ident = mask.split("!", 1)
-        ident, host = ident.split("@", 1)
-        try:
-            return connection.users[nick]
-        except KeyError:
-            temp = User(nick, ident, host, connection)
-            connection.users[temp.nick] = temp
-            return temp

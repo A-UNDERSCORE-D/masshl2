@@ -50,7 +50,7 @@ class Channel:
         else:
             raise ValueError("Unknown User")
 
-    def deluser(self, user: User):
+    def deluser(self, user: 'User'):
         """
         deletes a user from our channel if the user is in the userlist and
         is a member of the channel
@@ -62,3 +62,11 @@ class Channel:
             del self.memberships[user.nick]
         except KeyError:
             log("Attempted to remove a non-existent user from a channel")
+
+    def get_user(self, nick: str) -> 'User':
+        """Return the user object from a membership object on this channel"""
+        return self.get_member(nick).user
+
+    def get_member(self, nick: str) -> 'Membership':
+        """Return the membership object for a user"""
+        return self.memberships[nick]
