@@ -169,10 +169,7 @@ def onnames(connection, args):
     # clear out the current user list
     if not chan.receivingnames:
         chan.receivingnames = True
-        for user in chan.memberships:
-            usero: User = chan.memberships[user].user
-            del usero.memberships[chan.name]
-        chan.memberships = {}
+        chan.memberships.clear()
 
     for mask in names:
         mask = mask.strip()
@@ -203,19 +200,19 @@ def onnamesend(connection, args):
 
 @raw("JOIN")
 def onjoin(connection, prefix, args):
+    name = args[0]
     chan = connection.channels.get(args[0])
     nick = prefix.split("!")[0]
-    user = connection.users.get(nick)
-    name = args[0]
     if not chan:
-        connection.channels[name] = Channel(name, connection)
+        chan = Channel(name, connection)
+        connection.channels[name] = chan
 
-    if not user:
-        User.add(connection, prefix)
-
-    if not connection.channels[name].memberships.get(nick):
-        chan = connection.channels[name]
+    try:
         user = connection.users[nick]
+    except KeyError:
+        user = User.add(connection, prefix)
+
+    if nick not in chan.memberships:
         chan.adduser(connection, user)
     logall(connection)
 
@@ -274,18 +271,19 @@ def onmode(connection, args):
 
 @raw("PART")
 def onpart(connection, prefix, args):
-    chan: Channel = connection.channels.get(args[0], None)
-    user: User = connection.users.get(prefix.split("!")[0], None)
+    chan: Channel = connection.channels.get(args[0])
+    user: User = connection.users.get(prefix.split("!")[0])
     if not chan:
         log("WTF? I just got a part for a channel I dont have, "
             "channel was {c}".format(c=args))
         logall(connection)
+        return
 
     if user.nick == connection.nick:
-        chan.cleanup()
+        del connection.channels[chan.name]
         log(connection.channels)
     else:
-        chan.deluser(connection, user)
+        chan.deluser(user)
     logall(connection)
 
 
@@ -297,8 +295,8 @@ def onkick(connection, args):
     chan = connection.channels.get(kchan, None)
     if user and chan:
         if user.nick == connection.nick:
-            log("We were kicked from {}".format(chan.name), connection=connection)
-            chan.cleanup()
+            log("We were kicked from {}".format(kchan), connection=connection)
+            del connection.channels[kchan]
             log(connection.channels)
         else:
             chan.deluser(connection, user)

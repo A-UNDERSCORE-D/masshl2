@@ -1,5 +1,7 @@
 import socket
 import ssl
+from weakref import WeakValueDictionary
+
 from logger import log
 from handler import handler
 from selectors import DefaultSelector, EVENT_READ
@@ -31,7 +33,7 @@ class Connection:
         self.buffer = b""
         self.uhnames = False
         self.channels = {}
-        self.users = {}
+        self.users = WeakValueDictionary()
         self.connected = False
         self.hasquit = False
         self.capcount = 0
