@@ -54,6 +54,12 @@ def part(connection, cmdargs):
     connection.part(cmdargs)
 
 
+@command("raw")
+def raw(connection, cmdargs):
+    if cmdargs:
+        connection.write(cmdargs)
+
+
 def on_command(connection, args, prefix):
     temp = args[1][1:].split(None, 1)
     cmd = temp.pop(0)
