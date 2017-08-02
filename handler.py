@@ -17,6 +17,7 @@ def raw(*cmds):
         for cmd in cmds:
             HANDLERS.setdefault(cmd.upper(), []).append(func)
         return func
+
     return _decorate
 
 
@@ -38,6 +39,12 @@ def _internal_launch(func, data):
         assert arg in data
         params.append(data[arg])
     func(*params)
+
+
+def identify(connection):
+    connection.write("PRIVMSG NickServ :IDENTIFY {nsnick} {nspass}".format(
+        nsnick=connection.nsuser, nspass=connection.nspass
+    ))
 
 
 @raw("PING")
@@ -93,11 +100,56 @@ def capincrement(connection):
     connection.capcount += 1
 
 
-@raw("903", "904")
 def capdecrement(connection):
     connection.capcount -= 1
     if connection.capcount <= 0:
         connection.write("CAP END")
+
+
+@raw("903")
+def goodsasl(connection):
+    capdecrement(connection)
+
+
+@raw("904")
+def badsasl(connection):
+    capdecrement(connection)
+    log("SASL login failed, attempting PRIVMSG based login", connection=connection)
+    connection.cansasl = False
+
+
+@raw("005")
+def onisupport(connection, args):
+    tokens = args[1:-1]
+    for token in tokens:
+        if "NETWORK" in token:
+            connection.networkname = token.split("=")[1]
+
+        elif "PREFIX" in token:
+            pfx = token.split("=")[1]
+            pfx, modes = pfx.split(")", 1)
+            pfx = pfx[1:]
+            connection.p_mode_d = dict(zip(pfx, modes))
+            connection.p_modes.update(pfx)
+
+        elif "CHANMODES" in token:
+            modes = token.split("=")[1]
+            a, b, c, d = modes.split(",")
+            connection.a_modes.update(a)
+            connection.b_modes.update(b)
+            connection.c_modes.update(c)
+            connection.d_modes.update(d)
+
+        elif "EXCEPTS" in token:
+            mode = token.split("=")[1]
+            connection.a_modes.add(mode)
+            connection.banexept.add(mode)
+
+        elif "INVEX" in token:
+            mode = token.split("=")[1]
+            connection.a_modes.add(mode)
+            connection.invex.add(mode)
+
 
 
 @raw("376")
@@ -108,22 +160,6 @@ def onendmotd(connection):
         connection.write(command)
     connection.join(connection.adminchan)
     connection.join(connection.joinchannels)
-
-
-def identify(connection):
-    connection.write("PRIVMSG NickServ :IDENTIFY {nsnick} {nspass}".format(
-        nsnick=connection.nsuser, nspass=connection.nspass
-    ))
-
-
-@raw("PRIVMSG")
-def onprivmsg(connection, args, prefix):
-    if args[1].startswith(connection.cmdprefix):
-        on_command(connection, args, prefix)
-
-
-# :Cloud-9.A_DNet.net 353 Roy_Mustang = #adtest :@Roy_Mustang
-# :Cloud-9.A_DNet.net 366 Roy_Mustang #adtest :End of /NAMES list.
 
 
 @raw("353")
@@ -185,37 +221,10 @@ def onjoin(connection, prefix, args):
     logall(connection)
 
 
-@raw("005")
-def onisupport(connection, args):
-    tokens = args[1:-1]
-    for token in tokens:
-        if "NETWORK" in token:
-            connection.networkname = token.split("=")[1]
-
-        elif "PREFIX" in token:
-            pfx = token.split("=")[1]
-            pfx, modes = pfx.split(")", 1)
-            pfx = pfx[1:]
-            connection.Pmoded = dict(zip(pfx, modes))
-            connection.Pmodes.update(pfx)
-
-        elif "CHANMODES" in token:
-            modes = token.split("=")[1]
-            A, B, C, D = modes.split(",")
-            connection.Amodes.update(A)
-            connection.Bmodes.update(B)
-            connection.Cmodes.update(C)
-            connection.Dmodes.update(D)
-
-        elif "EXCEPTS" in token:
-            mode = token.split("=")[1]
-            connection.Amodes.add(mode)
-            connection.banexept.add(mode)
-
-        elif "INVEX" in token:
-            mode = token.split("=")[1]
-            connection.Amodes.add(mode)
-            connection.invex.add(mode)
+@raw("PRIVMSG")
+def onprivmsg(connection, args, prefix):
+    if args[1].startswith(connection.cmdprefix):
+        on_command(connection, args, prefix)
 
 
 @raw("MODE")
@@ -235,16 +244,16 @@ def onmode(connection, args):
         elif mode == "-":
             adding = False
             continue
-        elif mode in connection.Amodes:
+        elif mode in connection.a_modes:
             count += 1
-        elif mode in connection.Bmodes:
+        elif mode in connection.b_modes:
             count += 1
-        elif mode in connection.Cmodes:
+        elif mode in connection.c_modes:
             if adding:
                 count += 1
-        elif mode in connection.Dmodes:
+        elif mode in connection.d_modes:
             pass
-        elif mode in connection.Pmodes:
+        elif mode in connection.p_modes:
             nick = modeargs[count]
             log(str(("+" if adding else "-") + mode + " " + nick))
             membership = chan.users[nick]
@@ -259,6 +268,7 @@ def onmode(connection, args):
                 membership.isadmin = adding
             count += 1
             logchan(chan)
+
 
 # TODO: Deal with parts/kicks for myself
 
@@ -282,9 +292,15 @@ def onpart(connection, prefix, args):
 
 @raw("KICK")
 def onkick(connection, args):
-    user = connection.users.get(args[1], None)
-    chan = connection.channels.get((args[0]), None)
+    knick = args[1]
+    kchan = args[0]
+    user = connection.users.get(knick, None)
+    chan = connection.channels.get(kchan, None)
     if user and chan:
-        chan.deluser(connection, user)
+        if user.nick == connection.nick:
+            log("We were kicked from {}".format(chan.name), connection=connection)
+            chan.cleanup()
+            log(connection.channels)
+        else:
+            chan.deluser(connection, user)
     logall(connection)
-
