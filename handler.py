@@ -311,6 +311,10 @@ def onnick(connection, prefix, args):
     nnick = args[0]
     if onick == connection.nick:
         connection.nick = nnick
-    user = connection.users.get(onick)
+    try:
+        user = connection.users[onick]
+    except KeyError:
+        log("Attempted to renick a non-existent user")
+        return
     user.renick(nnick)
     logall(connection)
