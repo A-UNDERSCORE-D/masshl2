@@ -1,8 +1,13 @@
 import socket
 import ssl
-from logger import log
+from selectors import EVENT_READ
+from weakref import WeakValueDictionary
+
+import parser
+
 from handler import handler
-from selectors import DefaultSelector, EVENT_READ
+from logger import log
+from user import User
 
 
 class Connection:
@@ -31,7 +36,7 @@ class Connection:
         self.buffer = b""
         self.uhnames = False
         self.channels = {}
-        self.users = {}
+        self.users = WeakValueDictionary()
         self.connected = False
         self.hasquit = False
         self.capcount = 0
@@ -143,3 +148,20 @@ class Connection:
             return self.socket.fileno()
         else:
             return -1
+
+    def get_user(self, prefix: str) -> 'User':
+        nick, ident, host = parser.parse_prefix(prefix)
+        try:
+            return self.users[nick]
+        except KeyError:
+            user = User(nick, ident, host, self)
+            self.users[user.nick] = user
+            return user
+
+    def del_user(self, nick: str) -> None:
+        user = self.users[nick]
+        to_delete = [
+            membership.channel for membership in user.memberships.values()
+        ]
+        for chan in to_delete:
+            chan.deluser(user)

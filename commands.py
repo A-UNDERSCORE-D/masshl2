@@ -35,7 +35,7 @@ def die(connection):
 @command("nickl")
 def nickl(connection, channel):
     logcentered("nicks", connection=connection)
-    for nick in channel.users.keys():
+    for nick in channel.memberships.keys():
         print(nick)
 
 

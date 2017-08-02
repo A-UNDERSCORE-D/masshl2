@@ -1,10 +1,10 @@
 import base64
 import inspect
 
-from logger import *
-from user import User
 from channel import Channel
 from commands import on_command
+from logger import *
+from user import User
 
 # TODO: CTCP responses
 # TODO: on nick function
@@ -169,10 +169,7 @@ def onnames(connection, args):
     # clear out the current user list
     if not chan.receivingnames:
         chan.receivingnames = True
-        for user in chan.memberships:
-            usero: User = chan.memberships[user].user
-            del usero.memberships[chan.name]
-        chan.memberships = {}
+        chan.memberships.clear()
 
     for mask in names:
         mask = mask.strip()
@@ -188,8 +185,8 @@ def onnames(connection, args):
                 hop = True
             elif prefix == "+":
                 voice = True
-        temp = User.add(connection, mask)
 
+        temp = connection.get_user(mask)
         chan.adduser(connection, temp, isop=op, ishop=hop,
                      isvoice=voice, isadmin=admin)
 
@@ -203,19 +200,16 @@ def onnamesend(connection, args):
 
 @raw("JOIN")
 def onjoin(connection, prefix, args):
+    name = args[0]
     chan = connection.channels.get(args[0])
     nick = prefix.split("!")[0]
-    user = connection.users.get(nick)
-    name = args[0]
     if not chan:
-        connection.channels[name] = Channel(name, connection)
+        chan = Channel(name, connection)
+        connection.channels[name] = chan
 
-    if not user:
-        User.add(connection, prefix)
+    user = connection.get_user(prefix)
 
-    if not connection.channels[name].memberships.get(nick):
-        chan = connection.channels[name]
-        user = connection.users[nick]
+    if nick not in chan.memberships:
         chan.adduser(connection, user)
     logall(connection)
 
@@ -274,18 +268,27 @@ def onmode(connection, args):
 
 @raw("PART")
 def onpart(connection, prefix, args):
-    chan: Channel = connection.channels.get(args[0], None)
-    user: User = connection.users.get(prefix.split("!")[0], None)
-    if not chan:
+    chan_name = args[0]
+    try:
+        chan = connection.channels[chan_name]
+    except KeyError:
         log("WTF? I just got a part for a channel I dont have, "
-            "channel was {c}".format(c=args))
+            "channel was {c}".format(c=chan_name))
         logall(connection)
+        return
+
+    nick = prefix.split("!")[0]
+    try:
+        user = chan.get_user(nick)
+    except KeyError:
+        log("Received part for non-existent user '{}' from channel '{}'".format(nick, chan.name))
+        return
 
     if user.nick == connection.nick:
-        chan.cleanup()
+        del connection.channels[chan.name]
         log(connection.channels)
     else:
-        chan.deluser(connection, user)
+        chan.deluser(user)
     logall(connection)
 
 
@@ -293,15 +296,25 @@ def onpart(connection, prefix, args):
 def onkick(connection, args):
     knick = args[1]
     kchan = args[0]
-    user = connection.users.get(knick, None)
-    chan = connection.channels.get(kchan, None)
-    if user and chan:
-        if user.nick == connection.nick:
-            log("We were kicked from {}".format(chan.name), connection=connection)
-            chan.cleanup()
-            log(connection.channels)
-        else:
-            chan.deluser(connection, user)
+
+    try:
+        user = connection.users[knick]
+    except KeyError:
+        log("Handling kick for non-existent user")
+        return
+
+    try:
+        chan = connection.channels[kchan]
+    except KeyError:
+        log("Handling kick from non-existent channel")
+        return
+
+    if user.nick == connection.nick:
+        log("We were kicked from {}".format(kchan), connection=connection)
+        del connection.channels[kchan]
+        log(connection.channels)
+    else:
+        chan.deluser(user)
     logall(connection)
 
 
@@ -313,6 +326,22 @@ def onnick(connection, prefix, args):
     nnick = args[0]
     if onick == connection.nick:
         connection.nick = nnick
-    user = connection.users.get(onick)
+    try:
+        user = connection.users[onick]
+    except KeyError:
+        log("Attempted to renick a non-existent user")
+        return
     user.renick(nnick)
     logall(connection)
+
+
+@raw("QUIT")
+def onquit(connection, prefix):
+    nick = prefix.split("!")[0]
+    try:
+        user = connection.users[nick]
+    except KeyError:
+        log("Received quit from non-existent user '{}'".format(prefix))
+        return
+
+    connection.del_user(user)

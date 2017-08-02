@@ -1,6 +1,6 @@
 from logger import log
-from user import User
 from membership import Membership
+from user import User
 
 
 class Channel:
@@ -41,7 +41,7 @@ class Channel:
         in the channel
         :return: Membership, the membership object created
         """
-        if connection.users.get(user.nick, None):
+        if user.nick in connection.users:
             temp = Membership(self, user, isop=isop, ishop=ishop,
                               isvoice=isvoice, isadmin=isadmin)
             self.memberships[user.nick] = temp
@@ -50,35 +50,23 @@ class Channel:
         else:
             raise ValueError("Unknown User")
 
-    def deluser(self, connection, user: User):
+    def deluser(self, user: 'User'):
         """
         deletes a user from our channel if the user is in the userlist and
         is a member of the channel
 
         :param user: User object to be added to the channel
-        :param connection: Connection object to work on
         :return: 
         """
-        if user and connection.users.get(user.nick, None):
-            if self.memberships.get(user.nick):
-                del self.memberships[user.nick]
-                del user.memberships[self.name]
-                if len(user.memberships) == 0:
-                    del connection.users[user.nick]
-        else:
-            # raise ValueError("Unknown user")
-            log("Got a part for an unknown user! WTF?")
+        try:
+            del self.memberships[user.nick]
+        except KeyError:
+            log("Attempted to remove a non-existent user from a channel")
 
-    def cleanup(self):
-        log("cleanup called")
-        userlist = []
-        for user in self.memberships:
-            log("collecting users", connection=self.connection)
-            usero = self.memberships[user].user
-            userlist.append(usero)
-        log(str(userlist), connection=self.connection)
-        for user in userlist:
-            log(f"removing user: {user.nick}", connection=self.connection)
-            self.deluser(self.connection, user)
-        log("deleting self", connection=self.connection)
-        del self.connection.channels[self.name]
+    def get_user(self, nick: str) -> 'User':
+        """Return the user object from a membership object on this channel"""
+        return self.get_member(nick).user
+
+    def get_member(self, nick: str) -> 'Membership':
+        """Return the membership object for a user"""
+        return self.memberships[nick]
