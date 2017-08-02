@@ -25,7 +25,7 @@ class Connection:
         self.bot = bot
         self.name = name
 
-        self.selector: DefaultSelector = selector
+        self.selector = selector
         self.caps = {"userhost-in-names", "sasl"}
         self.socket = socket.socket()
         self.buffer = b""
@@ -39,18 +39,18 @@ class Connection:
         # Isupport stuff
 
         # adds or removes to a list, always has a parameter from the server
-        self.Amodes = set()
+        self.a_modes = set()
         # changes a setting on a channel, must always have a parameter from the
         # server and from clients like o and k
-        self.Bmodes = set()
+        self.b_modes = set()
         # must have a parameter when being set and must /not/ have one when
         # being unset, like F and H
-        self.Cmodes = set()
+        self.c_modes = set()
         # changes a setting on a channel, NEVER has a parameter
-        self.Dmodes = set()
+        self.d_modes = set()
         # modes with prefixes, are essentially type B
-        self.Pmodes = set()
-        self.Pmoded = {}
+        self.p_modes = set()
+        self.p_mode_d = {}
         self.banexept = set()
         self.invex = set()
         self.networkname = ""

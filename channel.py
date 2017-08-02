@@ -1,4 +1,4 @@
-from logger import log, logall
+from logger import log
 from user import User
 from membership import Membership
 
@@ -26,8 +26,9 @@ class Channel:
     def __eq__(self, other: str) -> bool:
         return self.name.lower() == other.lower()
 
-    def adduser(self, connection, user: User, isop: bool =False,
-            ishop: bool =False, isvoice: bool =False, isadmin: bool =False):
+    def adduser(self, connection, user: User, isop: bool = False,
+                ishop: bool = False, isvoice: bool = False,
+                isadmin: bool = False):
         """
         Adds a user to a channel, if the user exists in our list
 
@@ -72,12 +73,12 @@ class Channel:
         log("cleanup called")
         userlist = []
         for user in self.users:
-            log("collecting users")
+            log("collecting users", connection=self.connection)
             usero = self.users[user].user
             userlist.append(usero)
-        log(str(userlist))
+        log(str(userlist), connection=self.connection)
         for user in userlist:
-            log(f"removing user: {user.nick}")
+            log(f"removing user: {user.nick}", connection=self.connection)
             self.deluser(self.connection, user)
-        log("deleting self")
+        log("deleting self", connection=self.connection)
         del self.connection.channels[self.name]

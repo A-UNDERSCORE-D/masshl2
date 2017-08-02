@@ -2,6 +2,7 @@ from bot import Bot
 import sys
 import signal
 from random import choice
+
 # TODO: NEEDS MOAR ASCII ART!
 
 exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
@@ -20,10 +21,12 @@ def run():
     original_handler = signal.getsignal(signal.SIGINT)
     # connection = Connection(config=config, selector=selector)
     bot = Bot()
+
     # connection.connect()
     # selector.register(connection, EVENT_READ)
 
     # Called when we receive SIGINT, exits the connection gracefully
+    # noinspection PyUnusedLocal,PyUnusedLocal
     def interrupted(signo, frame):
         bot.stop("Killed by user.")
         # bot.selector.close()
@@ -33,6 +36,7 @@ def run():
 
     bot.run()
     print(choice(exits), file=sys.stderr)
+
 
 if __name__ == "__main__":
     run()
