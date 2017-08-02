@@ -41,7 +41,7 @@ class Channel:
         in the channel
         :return: Membership, the membership object created
         """
-        if connection.users.get(user.nick, None):
+        if user.nick in connection.users:
             temp = Membership(self, user, isop=isop, ishop=ishop,
                               isvoice=isvoice, isadmin=isadmin)
             self.memberships[user.nick] = temp

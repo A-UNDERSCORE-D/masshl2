@@ -291,15 +291,25 @@ def onpart(connection, prefix, args):
 def onkick(connection, args):
     knick = args[1]
     kchan = args[0]
-    user = connection.users.get(knick, None)
-    chan = connection.channels.get(kchan, None)
-    if user and chan:
-        if user.nick == connection.nick:
-            log("We were kicked from {}".format(kchan), connection=connection)
-            del connection.channels[kchan]
-            log(connection.channels)
-        else:
-            chan.deluser(user)
+
+    try:
+        user = connection.users[knick]
+    except KeyError:
+        log("Handling kick for non-existent user")
+        return
+
+    try:
+        chan = connection.channels[kchan]
+    except KeyError:
+        log("Handling kick from non-existent channel")
+        return
+
+    if user.nick == connection.nick:
+        log("We were kicked from {}".format(kchan), connection=connection)
+        del connection.channels[kchan]
+        log(connection.channels)
+    else:
+        chan.deluser(user)
     logall(connection)
 
 
