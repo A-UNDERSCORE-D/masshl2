@@ -299,7 +299,7 @@ def onkick(connection, args):
             del connection.channels[kchan]
             log(connection.channels)
         else:
-            chan.deluser(connection, user)
+            chan.deluser(user)
     logall(connection)
 
 
