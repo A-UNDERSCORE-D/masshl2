@@ -1,27 +1,29 @@
 import time
 import sys
 
+
 # TODO: Use logging or look into it
 
 
 def log(data: str, ltype: str = "log", connection=None):
     if ltype.lower() in ["ircin", "ircout", "log", "error"]:
+        curtime = time.strftime('%H:%M:%S')
         if connection:
             net = "{:^10}".format(connection.name)
         else:
             net = "{:^10}".format("")
 
         if ltype.lower() == "ircin":
-            print(f"{time.asctime()} : [{net}] >> {data}")
+            print(f"{curtime} : [{net}] >> {data}")
 
         elif ltype.lower() == "ircout":
-            print(f"{time.asctime()} : [{net}] << {data}")
+            print(f"{curtime} : [{net}] << {data}")
 
         elif ltype.lower() == "log":
-            print(f"{time.asctime()} : [{net}] >! {data}")
+            print(f"{curtime} : [{net}] >! {data}")
 
         elif ltype.lower() == "error":
-            print(f"{time.asctime()} : [{net}] !! {data}", file=sys.stderr)
+            print(f"{curtime} : [{net}] !! {data}", file=sys.stderr)
     else:
         raise ValueError("Unknown Log Type")
 
