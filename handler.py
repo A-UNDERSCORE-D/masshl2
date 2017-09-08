@@ -4,6 +4,7 @@ import inspect
 from channel import Channel
 from commands import on_command
 from logger import *
+import parser
 from user import User
 
 # TODO: CTCP responses
@@ -21,10 +22,11 @@ def raw(*cmds):
     return _decorate
 
 
-def handler(connection, prefix, command, args):
+def handler(connection, prefix, tags, command, args):
     data = {
         "connection": connection,
         "prefix": prefix,
+        "tags": tags,
         "command": command,
         "args": args,
     }
@@ -64,13 +66,13 @@ def sendauth(connection):
 
 @raw("CAP")
 def handlecap(connection, args):
-    command = args[1]
+    caps = args[1].split("=")
+    command = caps[0]
     if command == "LS":
         caplist = args[-1].split()
         caps = connection.caps.intersection(caplist)
         if len(caps) == 0:
             connection.write("CAP END")
-
         else:
             for cap in caps:
                 connection.write("CAP REQ :{}".format(cap))
@@ -122,17 +124,23 @@ def badsasl(connection):
 def onisupport(connection, args):
     tokens = args[1:-1]
     for token in tokens:
-        if "NETWORK" in token:
+        if "=" in token:
+            token_name, _, args = token.partition("=")
+            args = args or None
+        else:
+            token_name = token
+
+        if token_name == "NETWORK":
             connection.networkname = token.split("=")[1]
 
-        elif "PREFIX" in token:
+        elif token_name == "PREFIX":
             pfx = token.split("=")[1]
             pfx, modes = pfx.split(")", 1)
             pfx = pfx[1:]
             connection.p_mode_d = dict(zip(pfx, modes))
             connection.p_modes.update(pfx)
 
-        elif "CHANMODES" in token:
+        elif token_name == "CHANMODES":
             modes = token.split("=")[1]
             a, b, c, d = modes.split(",")
             connection.a_modes.update(a)
@@ -140,15 +148,18 @@ def onisupport(connection, args):
             connection.c_modes.update(c)
             connection.d_modes.update(d)
 
-        elif "EXCEPTS" in token:
+        elif token_name == "EXCEPTS":
             mode = token.split("=")[1]
             connection.a_modes.add(mode)
             connection.banexept.add(mode)
 
-        elif "INVEX" in token:
+        elif token_name == "INVEX":
             mode = token.split("=")[1]
             connection.a_modes.add(mode)
             connection.invex.add(mode)
+
+        elif token_name == "CHANTYPES":
+            connection.chantypes = list(args)
 
 
 @raw("376")
@@ -214,10 +225,23 @@ def onjoin(connection, prefix, args):
     logall(connection)
 
 
+MESSAGE_HOOKS = []
+
+
+def message(func):
+    MESSAGE_HOOKS.append(func)
+
+
 @raw("PRIVMSG")
 def onprivmsg(connection, args, prefix):
+    msg = parser.Message(connection, args, prefix, "PRIVMSG")
     if args[1].startswith(connection.cmdprefix):
         on_command(connection, args, prefix)
+
+
+@raw("NOTICE")
+def onnotice(connection, args, prefix):
+    pass
 
 
 @raw("MODE")
@@ -237,9 +261,7 @@ def onmode(connection, args):
         elif mode == "-":
             adding = False
             continue
-        elif mode in connection.a_modes:
-            count += 1
-        elif mode in connection.b_modes:
+        elif mode in connection.a_modes or mode in connection.b_modes:
             count += 1
         elif mode in connection.c_modes:
             if adding:
@@ -272,7 +294,7 @@ def onpart(connection, prefix, args):
     try:
         chan = connection.channels[chan_name]
     except KeyError:
-        log("WTF? I just got a part for a channel I dont have, "
+        log("WTF? I just got a part for a channel I don't have, "
             "channel was {c}".format(c=chan_name))
         logall(connection)
         return
