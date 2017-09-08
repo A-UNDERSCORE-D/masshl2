@@ -36,6 +36,7 @@ class Connection:
         self.buffer = b""
         self.uhnames = False
         self.channels = {}
+        self.chantypes = []
         self.users = WeakValueDictionary()
         self.connected = False
         self.hasquit = False
@@ -99,6 +100,10 @@ class Connection:
             raw, self.buffer = self.buffer.split(b"\r\n", 1)
             line = raw.decode()
             log(line, "ircin", self)
+            if line[0] == "@":
+                tags, line = line.split(None, 1)
+            else:
+                tags = None
             if line[0] == ":":
                 prefix, line = line.split(None, 1)
                 prefix = prefix[1:]
@@ -113,7 +118,7 @@ class Connection:
                     args[i] = " ".join(args[i:])[1:]
                     del args[i + 1:]
                 i += 1
-            handler(self, prefix, cmd, args)
+            handler(self, prefix, tags, cmd, args)
 
     def join(self, channels):
         chanstojoin: str = ""
