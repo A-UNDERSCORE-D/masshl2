@@ -1,11 +1,9 @@
 import base64
 import inspect
 
-from channel import Channel
-from commands import on_command
-from logger import *
 import parser
-from user import User
+from channel import Channel
+from logger import *
 
 # TODO: CTCP responses
 # TODO: on nick function
@@ -185,6 +183,7 @@ def onnames(connection, args):
     for mask in names:
         mask = mask.strip()
         admin, op, hop, voice = False, False, False, False
+        # TODO: un-hardcode this
         if mask[0] in "!@%+":
             prefix = mask[0]
             mask = mask[1:]
@@ -229,19 +228,26 @@ MESSAGE_HOOKS = []
 
 
 def message(func):
+    print("ADDING", func, "TO MESSAGE LIST.")
     MESSAGE_HOOKS.append(func)
+    print(MESSAGE_HOOKS)
+    return func
 
 
 @raw("PRIVMSG")
 def onprivmsg(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "PRIVMSG")
-    if args[1].startswith(connection.cmdprefix):
-        on_command(connection, args, prefix)
+    print(MESSAGE_HOOKS)
+    for func in MESSAGE_HOOKS:
+        print("CALLING", func, "WITH", msg)
+        func(msg)
 
 
 @raw("NOTICE")
 def onnotice(connection, args, prefix):
-    pass
+    msg = parser.Message(connection, args, prefix, "NOTICE")
+    for func in MESSAGE_HOOKS:
+        func(msg)
 
 
 @raw("MODE")
@@ -271,8 +277,7 @@ def onmode(connection, args):
         elif mode in connection.p_modes:
             nick = modeargs[count]
             log(str(("+" if adding else "-") + mode + " " + nick))
-            membership = chan.users[nick]
-
+            membership = chan.memberships[nick]
             if mode == "o":
                 membership.isop = adding
             elif mode == "h":
