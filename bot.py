@@ -2,6 +2,8 @@ from connection import Connection
 from config import Config
 import time
 from selectors import DefaultSelector
+import importlib
+import pathlib
 
 
 class Bot:
@@ -10,8 +12,11 @@ class Bot:
         self.selector = DefaultSelector()
         self.config = Config()
         self.running = False
+        self.plugins = {}
+        self.cwd = pathlib.Path().resolve()
 
     def run(self):
+        self._load_plugins()
         for network in self.config["connections"]:
             temp_connection = Connection(
                 config=self.config["connections"][network],
@@ -41,3 +46,14 @@ class Bot:
                 connection.close()
 
         self.running = False
+
+    def _load_plugins(self):
+        path = pathlib.Path("plugins").resolve().relative_to(self.cwd)
+        for file in path.glob("*.py"):
+            self._load_plugin('.'.join(file.parts).rsplit('.', 1)[0])
+
+    def _load_plugin(self, name):
+        # TODO: Unload if its there
+        assert name not in self.plugins
+        print("loading plugin", name)
+        self.plugins[name] = importlib.import_module(name)
