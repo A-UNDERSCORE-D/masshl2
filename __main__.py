@@ -26,9 +26,8 @@ def run():
     # selector.register(connection, EVENT_READ)
 
     # Called when we receive SIGINT, exits the connection gracefully
-    # noinspection PyUnusedLocal,PyUnusedLocal
     def interrupted(signo, frame):
-        bot.stop("Killed by user.")
+        bot.stop("Caught SIGINT")
         # bot.selector.close()
         signal.signal(signal.SIGINT, original_handler)
 
