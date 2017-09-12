@@ -7,6 +7,7 @@ import logging.config
 
 
 class Logger:
+    # also known as LogJect -linuxdaemon
     def __init__(self, conn):
         self._ircin_logger = logging.getLogger("ircin")
         self._ircout_logger = logging.getLogger("ircout")
