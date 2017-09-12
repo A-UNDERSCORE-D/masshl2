@@ -99,13 +99,13 @@ setup()
 
 
 def logall(connection):
-    connection.log(logcentered("CHANNELS"))
+    connection.log(centered("CHANNELS"))
     for channel in connection.channels:
         connection.log.debug(connection.channels[channel].name)
         for membership in connection.channels[channel].memberships:
             connection.log.debug("  `-" + connection.channels[channel].memberships[membership].user.mask)
 
-            connection.log(logcentered("USERS"))
+            connection.log(centered("USERS"))
     for user in connection.users:
         connection.log.debug(connection.users[user].mask)
         for channel in connection.users[user].memberships:
@@ -113,7 +113,7 @@ def logall(connection):
 
 
 def logchan(channel):
-    channel.connection.log(logcentered(f"USERS-ON-{channel.name}"))
+    channel.connection.log(centered(f"USERS-ON-{channel.name}"))
     channel.connection.log.debug(channel.name)
     for user in channel.memberships:
         usero = channel.memberships[user]
@@ -121,5 +121,5 @@ def logchan(channel):
         channel.connection.log.debug(" `-" + prefix + user,)
 
 
-def logcentered(msg):
+def centered(msg):
     return f"{msg:-^65}"
