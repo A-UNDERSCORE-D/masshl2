@@ -1,4 +1,10 @@
-from logger import *
+from logger import log, logcentered
+from handler import message
+
+
+@message
+def test(msg):
+    log(msg)
 
 
 def checknicks(connection, msg, chan):

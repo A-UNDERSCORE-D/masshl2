@@ -4,6 +4,8 @@ import time
 from selectors import DefaultSelector
 import importlib
 import pathlib
+import handler
+from typing import Dict, List, Callable
 
 
 class Bot:
@@ -14,6 +16,7 @@ class Bot:
         self.running = False
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
+        self.message_hooks: Dict[str, List[Callable]] = {}
 
     def run(self):
         self._load_plugins()
@@ -51,9 +54,24 @@ class Bot:
         path = pathlib.Path("plugins").resolve().relative_to(self.cwd)
         for file in path.glob("*.py"):
             self._load_plugin('.'.join(file.parts).rsplit('.', 1)[0])
+        print(self.message_hooks)
 
     def _load_plugin(self, name):
         # TODO: Unload if its there
-        assert name not in self.plugins
-        print("loading plugin", name)
-        self.plugins[name] = importlib.import_module(name)
+        try:
+            if name in self.plugins:
+                importlib.reload(self.plugins[name])
+            else:
+                print("loading plugin", name)
+                self.plugins[name] = importlib.import_module(name)
+        except Exception as e:
+            print(e)
+        self._load_msg_hooks(self.plugins[name])
+
+    def _load_msg_hooks(self, plugin):
+        for name, func in plugin.__dict__.items():
+            if hasattr(func, "_isMessageCallback"):
+                if not self.message_hooks.get(name):
+                    self.message_hooks[name] = [func]
+                else:
+                    self.message_hooks[name].append(func)

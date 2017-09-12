@@ -6,7 +6,7 @@ from weakref import WeakValueDictionary
 import parser
 
 from handler import handler
-from logger import log
+from logger import log, Logger
 from user import User
 
 
@@ -42,6 +42,9 @@ class Connection:
         self.hasquit = False
         self.capcount = 0
         self.cansasl = False
+
+        self.log = Logger(self)
+
         # Isupport stuff
 
         # adds or removes to a list, always has a parameter from the server

@@ -23,8 +23,12 @@ class Message:
         self.type = msg_type
         self.target: typing.Union[User, Channel]
         self.origin: typing.Union[User, None]
-        self.message: str
+        self.message: str = ""
         self._parse_msg(prefix, args)
+
+    @property
+    def bot(self):
+        return self.conn.bot
 
     def _parse_msg(self, prefix, args):
         nick, user, host = parse_prefix(prefix)
@@ -36,8 +40,8 @@ class Message:
         if not self.origin:
             log("WTF? Got a message from someone I dont know")
         if not self.target:
-            log("WTF? Got a message pointed at nothing", ltype="error")
+            log("WTF? Got a message pointed at nothing")
         self.message = args[1]
 
     def __str__(self):
-        return self.prefix + " " + self.args
+        return self.prefix + " " + " ".join(self.args)

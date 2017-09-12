@@ -223,31 +223,40 @@ def onjoin(connection, prefix, args):
         chan.adduser(connection, user)
     logall(connection)
 
+# TODO: This works... once. it should maybe work... more than once
+# TODO: This breaks on a plugin reload, because it will just readd the function to the list and not remove the old one
+# TODO: One idea was {pluginName: [func1, func2]}
 
-MESSAGE_HOOKS = []
 
+# def message(func):
+#     print("ADDING", func, "TO MESSAGE LIST.")
+#     MESSAGE_HOOKS.append(func)
+#     print(MESSAGE_HOOKS)
+#     return func
 
 def message(func):
-    print("ADDING", func, "TO MESSAGE LIST.")
-    MESSAGE_HOOKS.append(func)
-    print(MESSAGE_HOOKS)
+    func.__setattr__("_isMessageCallback", True)
     return func
 
 
 @raw("PRIVMSG")
 def onprivmsg(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "PRIVMSG")
-    print(MESSAGE_HOOKS)
-    for func in MESSAGE_HOOKS:
-        print("CALLING", func, "WITH", msg)
-        func(msg)
+    print(connection.bot.message_hooks)
+    for plugin in connection.bot.message_hooks:
+        for func in connection.bot.message_hooks[plugin]:
+            print("CALLING", func, "WITH", msg)
+            func(msg)
 
 
 @raw("NOTICE")
 def onnotice(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "NOTICE")
-    for func in MESSAGE_HOOKS:
-        func(msg)
+    print(connection.bot.message_hooks)
+    for plugin in connection.bot.message_hooks:
+        for func in connection.bot.message_hooks[plugin]:
+            print("CALLING", func, "WITH", msg)
+            func(msg)
 
 
 @raw("MODE")

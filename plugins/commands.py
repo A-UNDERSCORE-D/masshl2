@@ -1,6 +1,9 @@
 import inspect
-
-from logger import *
+from handler import message
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from parser import Message
+# from logger import *
 
 # TODO: for masshl, channel notice checking too
 
@@ -59,22 +62,31 @@ def command(*cmds):
 #     if cmdargs:
 #         connection.write(cmdargs)
 
+@message
+def on_msg(msg: 'Message'):
+    if not msg.message.startswith(msg.conn.cmdprefix):
+        return
+    cmd = msg.message.split(None, 1)[0][1:]
+    print(cmd)
+    print(msg)
+    msg.conn.log.info(cmd + " " + str(msg))
 
-def on_command(connection, args, prefix):
-    temp = args[1][1:].split(None, 1)
-    cmd = temp.pop(0)
-    cmdargs = ""
-    if temp:
-        cmdargs = temp.pop(0)
 
-    handler = COMMANDS.get(cmd)
-    if handler and callable(handler):
-        sig = inspect.signature(handler)
-        channel = connection.channels.get(args[0])
-        data = {
-            "connection": connection,
-            "channel": channel,
-            "cmdargs": cmdargs,
-        }
-        args = [data[arg] for arg in sig.parameters.keys()]
-        handler(*args)
+# def on_command(connection, args, prefix):
+#     temp = args[1][1:].split(None, 1)
+#     cmd = temp.pop(0)
+#     cmdargs = ""
+#     if temp:
+#         cmdargs = temp.pop(0)
+#
+#     handler = COMMANDS.get(cmd)
+#     if handler and callable(handler):
+#         sig = inspect.signature(handler)
+#         channel = connection.channels.get(args[0])
+#         data = {
+#             "connection": connection,
+#             "channel": channel,
+#             "cmdargs": cmdargs,
+#         }
+#         args = [data[arg] for arg in sig.parameters.keys()]
+#         handler(*args)
