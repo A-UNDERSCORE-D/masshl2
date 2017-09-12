@@ -4,7 +4,7 @@ import time
 from selectors import DefaultSelector
 import importlib
 import pathlib
-import handler
+from logger import Logger
 from typing import Dict, List, Callable
 
 
@@ -17,6 +17,8 @@ class Bot:
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
         self.message_hooks: Dict[str, List[Callable]] = {}
+        self.name = "masshl"
+        self.log = Logger(self)
 
     def run(self):
         self._load_plugins()
