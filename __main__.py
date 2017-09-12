@@ -1,14 +1,14 @@
-from bot import Bot
-import sys
 import signal
+import sys
 from random import choice
+
+from bot import Bot
 
 # TODO: NEEDS MOAR ASCII ART!
 
-exits = ["Socket Closed. This socket is no more, it has ceased to be. Its "
-         "expired and gone to meet its maker. THIS IS AN EX SOCKET!",
-         "\"VOOM\"!? This socket wouldn't \"voom\" if you put four million "
-         "volts through it!",
+exits = ["Socket Closed. This socket is no more, it has ceased to be. Its expired and gone to meet its maker. "
+         "THIS IS AN EX SOCKET!",
+         "\"VOOM\"!? This socket wouldn't \"voom\" if you put four million volts through it!",
          "This socket does not know how not to be seen",
          "Socket, will you stand up please"
          ]
