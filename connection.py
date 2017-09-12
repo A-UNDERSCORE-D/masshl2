@@ -6,7 +6,7 @@ from weakref import WeakValueDictionary
 import parser
 
 from handler import handler
-from logger import log, Logger
+from logger import Logger
 from user import User
 
 
@@ -92,17 +92,17 @@ class Connection:
     def write(self, data):
         if isinstance(data, bytes):
             self.socket.send(data + b"\r\n")
-            log(data.decode(), "ircout", self)
+            self.log.ircout(data.decode())
         else:
             self.socket.send((data + "\r\n").encode())
-            log(data, "ircout", self)
+            self.log.ircout(data)
 
     def parse(self, data):
         self.buffer += data
         while b"\r\n" in self.buffer:
             raw, self.buffer = self.buffer.split(b"\r\n", 1)
             line = raw.decode()
-            log(line, "ircin", self)
+            self.log.ircin(line)
             if line[0] == "@":
                 tags, line = line.split(None, 1)
             else:

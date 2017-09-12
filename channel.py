@@ -1,4 +1,3 @@
-from logger import log
 from membership import Membership
 from user import User
 
@@ -61,7 +60,7 @@ class Channel:
         try:
             del self.memberships[user.nick]
         except KeyError:
-            log("Attempted to remove a non-existent user from a channel")
+            self.connection.log("Attempted to remove a non-existent user from a channel")
 
     def get_user(self, nick: str) -> 'User':
         """Return the user object from a membership object on this channel"""

@@ -1,6 +1,5 @@
 import re
 import typing
-from logger import log
 
 if typing.TYPE_CHECKING:
     from user import User
@@ -38,9 +37,9 @@ class Message:
             self.target = self.conn.users.get(args[0])
         self.origin = self.conn.users.get(nick)
         if not self.origin:
-            log("WTF? Got a message from someone I dont know")
+            self.conn.log.error("WTF? Got a message from someone I dont know")
         if not self.target:
-            log("WTF? Got a message pointed at nothing")
+            self.conn.log("WTF? Got a message pointed at nothing")
         self.message = args[1]
 
     def __str__(self):

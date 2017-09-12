@@ -114,7 +114,7 @@ def goodsasl(connection):
 @raw("904")
 def badsasl(connection):
     capdecrement(connection)
-    log("SASL login failed, attempting PRIVMSG based login", connection=connection)
+    connection.log("SASL login failed, attempting PRIVMSG based login")
     connection.cansasl = False
 
 
@@ -285,7 +285,7 @@ def onmode(connection, args):
             pass
         elif mode in connection.p_modes:
             nick = modeargs[count]
-            log(str(("+" if adding else "-") + mode + " " + nick))
+            connection.log(str(("+" if adding else "-") + mode + " " + nick))
             membership = chan.memberships[nick]
             if mode == "o":
                 membership.isop = adding
@@ -308,8 +308,7 @@ def onpart(connection, prefix, args):
     try:
         chan = connection.channels[chan_name]
     except KeyError:
-        log("WTF? I just got a part for a channel I don't have, "
-            "channel was {c}".format(c=chan_name))
+        connection.log("WTF? I just got a part for a channel I don't have, channel was {c}".format(c=chan_name))
         logall(connection)
         return
 
@@ -317,12 +316,12 @@ def onpart(connection, prefix, args):
     try:
         user = chan.get_user(nick)
     except KeyError:
-        log("Received part for non-existent user '{}' from channel '{}'".format(nick, chan.name))
+        connection.log("Received part for non-existent user '{}' from channel '{}'".format(nick, chan.name))
         return
 
     if user.nick == connection.nick:
         del connection.channels[chan.name]
-        log(connection.channels)
+        connection.log(connection.channels)
     else:
         chan.deluser(user)
     logall(connection)
@@ -336,19 +335,19 @@ def onkick(connection, args):
     try:
         user = connection.users[knick]
     except KeyError:
-        log("Handling kick for non-existent user")
+        connection.log("Handling kick for non-existent user")
         return
 
     try:
         chan = connection.channels[kchan]
     except KeyError:
-        log("Handling kick from non-existent channel")
+        connection.log("Handling kick from non-existent channel")
         return
 
     if user.nick == connection.nick:
-        log("We were kicked from {}".format(kchan), connection=connection)
+        connection.log("We were kicked from {}".format(kchan), connection=connection)
         del connection.channels[kchan]
-        log(connection.channels)
+        connection.log(connection.channels)
     else:
         chan.deluser(user)
     logall(connection)
@@ -365,7 +364,7 @@ def onnick(connection, prefix, args):
     try:
         user = connection.users[onick]
     except KeyError:
-        log("Attempted to renick a non-existent user")
+        connection.log("Attempted to renick a non-existent user")
         return
     user.renick(nnick)
     logall(connection)
@@ -377,7 +376,7 @@ def onquit(connection, prefix):
     try:
         user = connection.users[nick]
     except KeyError:
-        log("Received quit from non-existent user '{}'".format(prefix))
+        connection.log("Received quit from non-existent user '{}'".format(prefix))
         return
 
     connection.del_user(user)

@@ -2,8 +2,6 @@ import weakref
 from typing import TYPE_CHECKING
 from weakref import WeakValueDictionary
 
-from logger import log
-
 if TYPE_CHECKING:
     from connection import Connection
 
@@ -30,9 +28,9 @@ class User:
         return self.nick + "!" + self.user + "@" + self.host
 
     def renick(self, newnick: str):
-        log("Running renick", connection=self.connection)
+        self.connection.log("Running renick", connection=self.connection)
         for name, membership in self.memberships.items():
-            log(f"Checking memberships: {membership}", connection=self.connection)
+            self.connection.log(f"Checking memberships: {membership}", connection=self.connection)
             me = membership.channel.memberships.pop(self.nick)
             membership.channel.memberships[newnick] = me
         self.connection.users[newnick] = self.connection.users.pop(self.nick)
