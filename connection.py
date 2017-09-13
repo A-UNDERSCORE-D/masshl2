@@ -166,8 +166,11 @@ class Connection:
             self.users[user.nick] = user
             return user
 
-    def del_user(self, nick: str) -> None:
-        user = self.users[nick]
+    def del_user(self, nick) -> None:
+        if isinstance(nick, str):
+            user = self.users[nick]
+        else:
+            user = nick
         to_delete = [
             membership.channel for membership in user.memberships.values()
         ]
