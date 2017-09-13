@@ -255,7 +255,6 @@ def on_msg(msg):
     todo = []
     for plugin in msg.conn.bot.message_hooks:
         for func in msg.conn.bot.message_hooks[plugin]:
-            print("CALLING", func, "WITH", msg)
             res = func(msg)
             if res:
                 todo.append(res)
