@@ -83,7 +83,7 @@ def on_msg(msg: 'Message'):
             "args": args
         }
         # send it the requested args
-        handler(*[data[arg] for arg in sig.parameters.keys()])
+        return handler(*[data[arg] for arg in sig.parameters.keys()])
 
 
 @command("msgme")
@@ -102,9 +102,13 @@ def reload(msg: 'Message', args):
             resp = msg.bot.load_plugin(plugin_name)
             if resp:
                 msg.target.send_message(str(resp))
-    print("returning", todo)
+
     return todo
 
+
+@command("say")
+def say(args):
+    return " ".join(args)
 
 # def on_command(connection, args, prefix):
 #     temp = args[1][1:].split(None, 1)
