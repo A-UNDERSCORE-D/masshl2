@@ -40,7 +40,7 @@ class Message:
         else:
             self.target = self.conn.users.get(args[0])
         self.origin = self.conn.users.get(nick)
-        if not self.origin:
+        if not self.origin and prefix != self.conn.server:
             self.conn.log.error("WTF? Got a message from someone I dont know")
         if not self.target:
             self.conn.log("WTF? Got a message pointed at nothing")
