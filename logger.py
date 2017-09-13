@@ -29,6 +29,9 @@ class Logger:
     def error(self, message):
         self._def_logger.error(self.format(message))
 
+    def exception(self, exception):
+        self._def_logger.exception(exception)
+
     def format(self, message):
         return f"[{self.conn:^10}] {message}"
 
