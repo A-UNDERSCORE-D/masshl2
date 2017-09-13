@@ -66,8 +66,10 @@ class Bot:
             else:
                 print("loading plugin", name)
                 self.plugins[name] = importlib.import_module(name)
+
         except Exception as e:
-            print(e)
+            self.log.exception(e)
+            return
         self._load_msg_hooks(self.plugins[name])
 
     def _load_msg_hooks(self, plugin):
