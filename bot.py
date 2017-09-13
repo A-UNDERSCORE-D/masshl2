@@ -65,8 +65,11 @@ class Bot:
             if hasattr(imported_module, "_masshl_loaded"):
                 del self.plugins[name]
                 if name in self.message_hooks:
+                    print("removed hooks")
                     del self.message_hooks[name]
-
+                    print(self.message_hooks)
+                print("reloading")
+                importlib.invalidate_caches()
                 importlib.reload(imported_module)
 
         except Exception as e:
@@ -81,6 +84,7 @@ class Bot:
     def _load_msg_hooks(self, plugin, name):
         for func in plugin.__dict__.values():
             if hasattr(func, "_isMessageCallback"):
+                print(func.__module__, func)
                 if not self.message_hooks.get(name):
                     self.message_hooks[name] = [func]
                 else:

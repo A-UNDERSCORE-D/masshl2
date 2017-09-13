@@ -110,6 +110,11 @@ def reload(msg: 'Message', args):
 def say(args):
     return " ".join(args)
 
+
+@command("print")
+def cmd_print(msg):
+    return str(msg.bot.message_hooks)
+
 # def on_command(connection, args, prefix):
 #     temp = args[1][1:].split(None, 1)
 #     cmd = temp.pop(0)
