@@ -95,9 +95,14 @@ def reload(msg: 'Message', args):
 
     def todo():
         for plugin_name in args:
+            if plugin_name == 'antigravity':
+                msg.target.send_message("https://xkcd.com/353/")
+                continue
             resp = msg.bot.load_plugin(plugin_name)
             if resp:
                 msg.target.send_message(str(resp))
+            else:
+                msg.target.send_message(f"Reloaded '{plugin_name}' successfully")
 
     return todo
 
@@ -143,4 +148,3 @@ def cmd_part(args, conn):
             continue
         chans.append(chan)
     conn.part(chans, reason)
-
