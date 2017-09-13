@@ -63,7 +63,7 @@ def setup():
         "handlers": {
             "ircin": {
                 "class": "logging.StreamHandler",
-                "formatter": "ircout",
+                "formatter": "ircin",
                 "level": "INFO",
                 "stream": "ext://sys.stdout",
             },
@@ -108,7 +108,7 @@ def logall(connection):
         for membership in connection.channels[channel].memberships:
             connection.log.debug("  `-" + connection.channels[channel].memberships[membership].user.mask)
 
-            connection.log(centered("USERS"))
+    connection.log(centered("USERS"))
     for user in connection.users:
         connection.log.debug(connection.users[user].mask)
         for channel in connection.users[user].memberships:
