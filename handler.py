@@ -235,28 +235,38 @@ def onjoin(connection, prefix, args):
 #     return func
 
 def message(func):
-    func.__setattr__("_isMessageCallback", True)
+    func.__setattr__("_isMessageCallback", None)
     return func
 
 
 @raw("PRIVMSG")
 def onprivmsg(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "PRIVMSG")
-    print(connection.bot.message_hooks)
-    for plugin in connection.bot.message_hooks:
-        for func in connection.bot.message_hooks[plugin]:
-            print("CALLING", func, "WITH", msg)
-            func(msg)
+    on_msg(msg)
 
 
 @raw("NOTICE")
 def onnotice(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "NOTICE")
-    print(connection.bot.message_hooks)
-    for plugin in connection.bot.message_hooks:
-        for func in connection.bot.message_hooks[plugin]:
+    on_msg(msg)
+
+
+def on_msg(msg):
+    todo = []
+    for plugin in msg.conn.bot.message_hooks:
+        for func in msg.conn.bot.message_hooks[plugin]:
             print("CALLING", func, "WITH", msg)
-            func(msg)
+            res = func(msg)
+            print(res)
+            if res:
+                todo.append(res)
+    print(todo)
+    for res in todo:
+        print(res)
+        if callable(res):
+            res()
+        elif isinstance(res, str):
+            msg.target.send_message(res)
 
 
 @raw("MODE")

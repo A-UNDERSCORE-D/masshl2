@@ -50,4 +50,4 @@ class Message:
         return self.prefix + " " + " ".join(self.args)
 
     def __len__(self):
-        return len(self.message)
+        return len(self.s_msg)

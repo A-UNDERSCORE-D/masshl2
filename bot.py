@@ -55,21 +55,26 @@ class Bot:
     def _load_plugins(self):
         path = pathlib.Path("plugins").resolve().relative_to(self.cwd)
         for file in path.glob("*.py"):
-            self._load_plugin('.'.join(file.parts).rsplit('.', 1)[0])
+            self.load_plugin('.'.join(file.parts).rsplit('.', 1)[0])
         print(self.message_hooks)
 
-    def _load_plugin(self, name):
-        # TODO: Unload if its there
+    def load_plugin(self, name):
         try:
-            if name in self.plugins:
-                importlib.reload(self.plugins[name])
-            else:
-                print("loading plugin", name)
-                self.plugins[name] = importlib.import_module(name)
+            print("loading plugin", name)
+            imported_module = importlib.import_module(name)
+            if hasattr(imported_module, "_masshl_loaded"):
+                del self.plugins[name]
+                if name in self.message_hooks:
+                    del self.message_hooks[name]
+
+                importlib.reload(imported_module)
+            setattr(imported_module, "_masshl_loaded", None)
+            self.plugins[name] = imported_module
+            self._load_msg_hooks(imported_module)
 
         except Exception as e:
             self.log.exception(e)
-            return
+            return e
         self._load_msg_hooks(self.plugins[name])
 
     def _load_msg_hooks(self, plugin):

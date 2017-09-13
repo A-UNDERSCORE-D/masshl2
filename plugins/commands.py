@@ -66,10 +66,44 @@ def command(*cmds):
 def on_msg(msg: 'Message'):
     if not msg.message.startswith(msg.conn.cmdprefix):
         return
-    cmd = msg.message.split(None, 1)[0][1:]
-    print(cmd)
-    print(msg)
-    msg.conn.log.info(cmd + " " + str(msg))
+
+    cmd = msg.s_msg[0][1:]
+
+    if len(msg) > 1:
+        args = msg.s_msg[1:]
+    else:
+        args = []
+
+    handler = COMMANDS.get(cmd)
+    if handler and callable(handler):
+        sig = inspect.signature(handler)
+        data = {
+            "msg": msg,
+            "cmd": cmd,
+            "args": args
+        }
+        # send it the requested args
+        handler(*[data[arg] for arg in sig.parameters.keys()])
+
+
+@command("msgme")
+def msgme(msg: 'Message', args):
+    msg.origin.send_message("requested")
+
+
+@command("reload")
+def reload(msg: 'Message', args):
+    if len(args) < 1:
+        msg.target.send_message("reload requires an argument")
+        return
+
+    def todo():
+        for plugin_name in args:
+            resp = msg.bot.load_plugin(plugin_name)
+            if resp:
+                msg.target.send_message(str(resp))
+    print("returning", todo)
+    return todo
 
 
 # def on_command(connection, args, prefix):
