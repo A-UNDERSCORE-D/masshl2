@@ -114,22 +114,3 @@ def say(args):
 @command("print")
 def cmd_print(msg):
     return str(msg.bot.message_hooks)
-
-# def on_command(connection, args, prefix):
-#     temp = args[1][1:].split(None, 1)
-#     cmd = temp.pop(0)
-#     cmdargs = ""
-#     if temp:
-#         cmdargs = temp.pop(0)
-#
-#     handler = COMMANDS.get(cmd)
-#     if handler and callable(handler):
-#         sig = inspect.signature(handler)
-#         channel = connection.channels.get(args[0])
-#         data = {
-#             "connection": connection,
-#             "channel": channel,
-#             "cmdargs": cmdargs,
-#         }
-#         args = [data[arg] for arg in sig.parameters.keys()]
-#         handler(*args)
