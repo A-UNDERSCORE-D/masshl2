@@ -68,16 +68,18 @@ class Bot:
                     del self.message_hooks[name]
 
                 importlib.reload(imported_module)
-            setattr(imported_module, "_masshl_loaded", None)
-            self.plugins[name] = imported_module
-            self._load_msg_hooks(imported_module)
 
         except Exception as e:
             self.log.exception(e)
             return e
 
-    def _load_msg_hooks(self, plugin):
-        for name, func in plugin.__dict__.items():
+        else:
+            setattr(imported_module, "_masshl_loaded", None)
+            self.plugins[name] = imported_module
+            self._load_msg_hooks(imported_module, name)
+
+    def _load_msg_hooks(self, plugin, name):
+        for func in plugin.__dict__.values():
             if hasattr(func, "_isMessageCallback"):
                 if not self.message_hooks.get(name):
                     self.message_hooks[name] = [func]
