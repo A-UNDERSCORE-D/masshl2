@@ -75,7 +75,6 @@ class Bot:
         except Exception as e:
             self.log.exception(e)
             return e
-        self._load_msg_hooks(self.plugins[name])
 
     def _load_msg_hooks(self, plugin):
         for name, func in plugin.__dict__.items():
