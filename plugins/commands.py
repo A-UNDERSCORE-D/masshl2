@@ -55,12 +55,6 @@ def command(*cmds):
 # @command("part")
 # def part(connection, cmdargs):
 #     connection.part(cmdargs)
-#
-# 
-# @command("raw")
-# def raw(connection, cmdargs):
-#     if cmdargs:
-#         connection.write(cmdargs)
 
 @message
 def on_msg(msg: 'Message'):
@@ -80,7 +74,9 @@ def on_msg(msg: 'Message'):
         data = {
             "msg": msg,
             "cmd": cmd,
-            "args": args
+            "args": args,
+            "conn": msg.conn,
+            "bot": msg.bot
         }
         # send it the requested args
         return handler(*[data[arg] for arg in sig.parameters.keys()])
@@ -114,3 +110,37 @@ def say(args):
 @command("print")
 def cmd_print(msg):
     return str(msg.bot.message_hooks)
+
+
+@command("raw")
+def cmd_raw(conn, args):
+    if len(args) < 1:
+        return "raw requires an argument"
+    conn.write(" ".join(args))
+
+
+@command("die")
+def cmd_die(bot):
+    bot.stop()
+
+
+@command("join")
+def cmd_join(conn, args):
+    if len(args) < 1:
+        return "join requires an argument"
+    conn.join(args)
+
+
+@command("part")
+def cmd_part(args, conn):
+    if len(args) < 1:
+        return "part requires an argument"
+    chans = []
+    reason = "Controller requested part"
+    for chan in args:
+        if chan.startswith(":"):
+            reason = chan
+            continue
+        chans.append(chan)
+    conn.part(chans, reason)
+
