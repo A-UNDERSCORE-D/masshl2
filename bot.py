@@ -42,7 +42,7 @@ class Bot:
                 file.fileobj.read()
         self.selector.close()
 
-    def stop(self, reason):
+    def stop(self, reason="Controller requested stop"):
         for connection in self.connections:
             if not connection.hasquit:
                 connection.quit(reason)
