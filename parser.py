@@ -24,6 +24,10 @@ class Message:
         self.origin: typing.Union[User, None]
         self.message: str = ""
         self._parse_msg(prefix, args)
+        self.s_msg = self.message.split(" ")
+        self.eol_msg = []
+        for i, word in enumerate(self.s_msg):
+            self.eol_msg.append(self.s_msg[i:])
 
     @property
     def bot(self):
@@ -44,3 +48,6 @@ class Message:
 
     def __str__(self):
         return self.prefix + " " + " ".join(self.args)
+
+    def __len__(self):
+        return len(self.message)
