@@ -247,24 +247,29 @@ def message(func):
 @raw("PRIVMSG")
 def onprivmsg(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "PRIVMSG")
-    on_msg(msg)
+    on_msg(msg, connection)
 
 
 @raw("NOTICE")
 def onnotice(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "NOTICE")
-    on_msg(msg)
+    on_msg(msg, connection)
 
 
-def on_msg(msg):
+def on_msg(msg, conn):
     todo = []
     for plugin in msg.conn.bot.message_hooks:
         for func in msg.conn.bot.message_hooks[plugin]:
-            res = func(msg)
-            if res:
-                todo.append(res)
+            try:
+                res = func(msg)
+            except Exception as e:
+                conn.log.exception(e)
+                msg.target.send_message(f"{func} in {func.__module__} just broke. Who wrote it? I want their head. "
+                                        f"\"{e}\"")
+            else:
+                if res:
+                    todo.append(res)
     for res in todo:
-        print(res)
         if callable(res):
             res()
         elif isinstance(res, str):
