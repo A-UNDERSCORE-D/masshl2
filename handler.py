@@ -118,6 +118,11 @@ def badsasl(connection):
     connection.cansasl = False
 
 
+@raw("001")
+def onwelcome(connection, args):
+    connection.server = args[0][1:]
+
+
 @raw("005")
 def onisupport(connection, args):
     tokens = args[1:-1]
@@ -352,7 +357,7 @@ def onkick(connection, args):
         return
 
     if user.nick == connection.nick:
-        connection.log("We were kicked from {}".format(kchan), connection=connection)
+        connection.log("We were kicked from {}".format(kchan))
         del connection.channels[kchan]
         connection.log(connection.channels)
     else:
