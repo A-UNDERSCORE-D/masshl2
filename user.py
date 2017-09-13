@@ -35,3 +35,9 @@ class User:
             membership.channel.memberships[newnick] = me
         self.connection.users[newnick] = self.connection.users.pop(self.nick)
         self.nick = newnick
+
+    def send_message(self, msg: str):
+        self.connection.write(f"PRIVMSG {self.nick} :{msg}")
+
+    def send_notice(self, msg: str):
+        self.connection.write(f"NOTICE {self.nick} : {msg}")

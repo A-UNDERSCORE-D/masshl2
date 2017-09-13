@@ -69,3 +69,9 @@ class Channel:
     def get_member(self, nick: str) -> 'Membership':
         """Return the membership object for a user"""
         return self.memberships[nick]
+
+    def send_message(self, msg: str):
+        self.connection.write(f"PRIVMSG {self.name} :{msg}")
+
+    def send_notice(self, msg: str):
+        self.connection.write(f"NOTICE {self.name} :{msg}")
