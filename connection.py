@@ -63,6 +63,7 @@ class Connection:
         self.banexept = set()
         self.invex = set()
         self.networkname = ""
+        self.server = ""
         self.maxJtargets = 0
 
     def connect(self):
@@ -73,8 +74,7 @@ class Connection:
         self.selector.register(self, EVENT_READ)
         self.write("CAP LS")
         self.write("NICK {nick}".format(nick=self.nick))
-        self.write("USER {user} * * :{gecos}".format(user=self.user,
-                                                     gecos=self.gecos))
+        self.write("USER {user} * * :{gecos}".format(user=self.user, gecos=self.gecos))
 
     def read(self):
         if self.connected:
@@ -132,14 +132,17 @@ class Connection:
         if chanstojoin:
             self.write(f"JOIN {chanstojoin}")
 
-    def part(self, channels):
+    def part(self, channels, msg=None):
         chanstopart: str = ""
         if isinstance(channels, list):
             chanstopart = ",".join(channels)
         elif isinstance(channels, str):
             chanstopart = channels
         if chanstopart:
-            self.write(f"PART {chanstopart}")
+            if msg:
+                self.write(f"PART {chanstopart} {msg}")
+            else:
+                self.write(f"PART {chanstopart}")
 
     def quit(self, message):
         self.write("QUIT :{msg}".format(msg=message))
