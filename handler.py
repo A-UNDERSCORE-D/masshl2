@@ -257,10 +257,8 @@ def on_msg(msg):
         for func in msg.conn.bot.message_hooks[plugin]:
             print("CALLING", func, "WITH", msg)
             res = func(msg)
-            print(res)
             if res:
                 todo.append(res)
-    print(todo)
     for res in todo:
         print(res)
         if callable(res):
