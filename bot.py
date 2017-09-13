@@ -5,6 +5,7 @@ from selectors import DefaultSelector
 import importlib
 import pathlib
 from logger import Logger
+from collections import defaultdict
 from typing import Dict, List, Callable
 
 
@@ -16,7 +17,7 @@ class Bot:
         self.running = False
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
-        self.message_hooks: Dict[str, List[Callable]] = {}
+        self.message_hooks: Dict[str, List[Callable]] = defaultdict(list)
         self.name = "masshl"
         self.log = Logger(self)
 
@@ -60,17 +61,14 @@ class Bot:
 
     def load_plugin(self, name):
         try:
+            if name in self.plugins:
+                self.unload(name)
             print("loading plugin", name)
             imported_module = importlib.import_module(name)
             if hasattr(imported_module, "_masshl_loaded"):
-                del self.plugins[name]
-                if name in self.message_hooks:
-                    print("removed hooks")
-                    del self.message_hooks[name]
-                    print(self.message_hooks)
-                print("reloading")
-                importlib.invalidate_caches()
                 importlib.reload(imported_module)
+            else:
+                setattr(imported_module, "_masshl_loaded", None)
 
         except Exception as e:
             self.log.exception(e)
@@ -81,11 +79,15 @@ class Bot:
             self.plugins[name] = imported_module
             self._load_msg_hooks(imported_module, name)
 
+    def unload(self, name):
+        if name in self.plugins:
+            del self.plugins[name]
+        if name in self.message_hooks:
+            del self.message_hooks[name]
+
     def _load_msg_hooks(self, plugin, name):
         for func in plugin.__dict__.values():
             if hasattr(func, "_isMessageCallback"):
                 print(func.__module__, func)
-                if not self.message_hooks.get(name):
-                    self.message_hooks[name] = [func]
-                else:
-                    self.message_hooks[name].append(func)
+                self.message_hooks[name].append(func)
+                delattr(func, "_isMessageCallback")
