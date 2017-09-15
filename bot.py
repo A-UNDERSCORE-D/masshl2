@@ -4,6 +4,7 @@ import time
 from selectors import DefaultSelector
 import importlib
 import pathlib
+import inspect
 from logger import Logger
 from collections import defaultdict
 from typing import Dict, List, Callable
@@ -91,3 +92,12 @@ class Bot:
                 print(func.__module__, func)
                 self.message_hooks[name].append(func)
                 delattr(func, "_isMessageCallback")
+
+    @staticmethod
+    def launch_hook(func: Callable, **kwargs):
+        sig = inspect.signature(func)
+        args = []
+        for arg in sig.parameters:
+            assert arg in kwargs
+            args.append(kwargs[arg])
+        return func(*args)

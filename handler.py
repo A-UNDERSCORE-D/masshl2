@@ -119,8 +119,8 @@ def badsasl(connection):
 
 
 @raw("001")
-def onwelcome(connection, args):
-    connection.server = args[0][1:]
+def onwelcome(connection, prefix):
+    connection.server = prefix
 
 
 @raw("005")
@@ -228,19 +228,9 @@ def onjoin(connection, prefix, args):
         chan.adduser(connection, user)
     logall(connection)
 
-# TODO: This works... once. it should maybe work... more than once
-# TODO: This breaks on a plugin reload, because it will just readd the function to the list and not remove the old one
-# TODO: One idea was {pluginName: [func1, func2]}
-
-
-# def message(func):
-#     print("ADDING", func, "TO MESSAGE LIST.")
-#     MESSAGE_HOOKS.append(func)
-#     print(MESSAGE_HOOKS)
-#     return func
 
 def message(func):
-    func.__setattr__("_isMessageCallback", None)
+    setattr(func, "_isMessageCallback", None)
     return func
 
 

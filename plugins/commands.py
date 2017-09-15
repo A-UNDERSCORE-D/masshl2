@@ -1,60 +1,32 @@
 import inspect
 from handler import message
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Union, Callable, NamedTuple
+import permissions
 if TYPE_CHECKING:
     from parser import Message
 # from logger import *
 
 # TODO: for masshl, channel notice checking too
 
-COMMANDS = {}
+# COMMANDS: Dict[str, List[Union[Callable, List, None]]] = {}
 
 
-def command(*cmds):
+class CommandHook(NamedTuple):
+    callback: Callable
+    perms: tuple = None
+
+
+COMMANDS: Dict[str, CommandHook] = {}
+
+
+def command(*cmds, perm=None):
     def _decorate(func):
         for cmd in cmds:
             assert cmd not in COMMANDS
-            COMMANDS[cmd] = func
+            COMMANDS[cmd] = CommandHook(func, perms=tuple(perm))
         return func
-
     return _decorate
 
-
-# @command("print")
-# def printlog(connection):
-#     logcentered("MODES", connection=connection)
-#     log("A: " + str(connection.a_modes))
-#     log("B: " + str(connection.b_modes))
-#     log("C: " + str(connection.c_modes))
-#     log("D: " + str(connection.d_modes))
-#     log("P: " + str(connection.p_modes))
-#
-#
-# @command("die")
-# def die(connection):
-#     connection.quit("Controller requested disconnect")
-#
-#
-# @command("nickl")
-# def nickl(connection, channel):
-#     logcentered("nicks", connection=connection)
-#     for nick in channel.memberships.keys():
-#         print(nick)
-#
-#
-# @command("stop")
-# def stop(connection):
-#     connection.bot.stop("Controller requested disconnect")
-#
-#
-# @command("join")
-# def join(connection, cmdargs):
-#     connection.join(cmdargs)
-#
-#
-# @command("part")
-# def part(connection, cmdargs):
-#     connection.part(cmdargs)
 
 @message
 def on_msg(msg: 'Message'):
@@ -69,17 +41,21 @@ def on_msg(msg: 'Message'):
         args = []
 
     handler = COMMANDS.get(cmd)
-    if handler and callable(handler):
-        sig = inspect.signature(handler)
-        data = {
-            "msg": msg,
-            "cmd": cmd,
-            "args": args,
-            "conn": msg.conn,
-            "bot": msg.bot
-        }
-        # send it the requested args
-        return handler(*[data[arg] for arg in sig.parameters.keys()])
+    if handler and callable(handler.callback):
+        if handler.perms and not permissions.check(msg, handler.perms):
+            return "Perm check failed."
+        func = handler.callback
+        # sig = inspect.signature(func)
+        # data = {
+        #     "msg": msg,
+        #     "cmd": cmd,
+        #     "args": args,
+        #     "conn": msg.conn,
+        #     "bot": msg.bot
+        # }
+        # # send it the requested args
+        # return func(*[data[arg] for arg in sig.parameters.keys()])
+        return msg.bot.launch_hook(func, msg, cmd, args, conn=msg.conn, bot=msg.bot)
 
 
 @command("msgme")
@@ -148,3 +124,8 @@ def cmd_part(args, conn):
             continue
         chans.append(chan)
     conn.part(chans, reason)
+
+
+@command("eval", perm=["admin"])
+def command_eval(bot, conn):
+    return "Perms Checked"
