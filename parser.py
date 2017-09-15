@@ -1,6 +1,7 @@
 import re
 import typing
 
+
 if typing.TYPE_CHECKING:
     from user import User
     from channel import Channel
@@ -25,9 +26,7 @@ class Message:
         self.message: str = ""
         self._parse_msg(prefix, args)
         self.s_msg = self.message.split(" ")
-        self.eol_msg = []
-        for i, word in enumerate(self.s_msg):
-            self.eol_msg.append(self.s_msg[i:])
+        self.eol_msg = [' '.join(args[i:]) for i in range(len(args))]
 
     @property
     def bot(self):
@@ -41,9 +40,9 @@ class Message:
             self.target = self.conn.users.get(args[0])
         self.origin = self.conn.users.get(nick)
         if not self.origin and prefix != self.conn.server:
-            self.conn.log.error("WTF? Got a message from someone I dont know")
-        if not self.target:
-            self.conn.log("WTF? Got a message pointed at nothing")
+            self.conn.log.debug("WTF? Got a message from someone I dont know")
+        if not self.target and args[0] != self.conn.nick:
+            self.conn.log.debug("WTF? Got a message pointed at nothing")
         self.message = args[1]
 
     def __str__(self):
