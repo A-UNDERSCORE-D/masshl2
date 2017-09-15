@@ -28,9 +28,9 @@ class User:
         return self.nick + "!" + self.user + "@" + self.host
 
     def renick(self, newnick: str):
-        self.connection.log("Running renick", connection=self.connection)
+        self.connection.log("Running renick")
         for name, membership in self.memberships.items():
-            self.connection.log(f"Checking memberships: {membership}", connection=self.connection)
+            self.connection.log(f"Checking memberships: {membership}")
             me = membership.channel.memberships.pop(self.nick)
             membership.channel.memberships[newnick] = me
         self.connection.users[newnick] = self.connection.users.pop(self.nick)
