@@ -1,6 +1,5 @@
-import inspect
 from handler import message
-from typing import TYPE_CHECKING, Dict, List, Union, Callable, NamedTuple
+from typing import TYPE_CHECKING, Dict, Callable, NamedTuple
 import permissions
 if TYPE_CHECKING:
     from parser import Message
@@ -23,7 +22,7 @@ def command(*cmds, perm=None):
     def _decorate(func):
         for cmd in cmds:
             assert cmd not in COMMANDS
-            COMMANDS[cmd] = CommandHook(func, perms=tuple(perm))
+            COMMANDS[cmd] = CommandHook(func, perms=tuple(perm or []))
         return func
     return _decorate
 
@@ -45,17 +44,14 @@ def on_msg(msg: 'Message'):
         if handler.perms and not permissions.check(msg, handler.perms):
             return "Perm check failed."
         func = handler.callback
-        # sig = inspect.signature(func)
-        # data = {
-        #     "msg": msg,
-        #     "cmd": cmd,
-        #     "args": args,
-        #     "conn": msg.conn,
-        #     "bot": msg.bot
-        # }
-        # # send it the requested args
-        # return func(*[data[arg] for arg in sig.parameters.keys()])
-        return msg.bot.launch_hook(func, msg, cmd, args, conn=msg.conn, bot=msg.bot)
+        data = {
+            "msg": msg,
+            "cmd": cmd,
+            "args": args,
+            "conn": msg.conn,
+            "bot": msg.bot
+        }
+        return msg.bot.launch_hook(func, **data)
 
 
 @command("msgme")

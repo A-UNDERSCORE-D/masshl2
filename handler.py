@@ -1,5 +1,4 @@
 import base64
-import inspect
 
 import parser
 from channel import Channel
@@ -16,7 +15,6 @@ def raw(*cmds):
         for cmd in cmds:
             HANDLERS.setdefault(cmd.upper(), []).append(func)
         return func
-
     return _decorate
 
 
@@ -29,16 +27,7 @@ def handler(connection, prefix, tags, command, args):
         "args": args,
     }
     for func in HANDLERS.get(command, []):
-        _internal_launch(func, data)
-
-
-def _internal_launch(func, data):
-    sig = inspect.signature(func)
-    params = []
-    for arg in sig.parameters.keys():
-        assert arg in data
-        params.append(data[arg])
-    func(*params)
+        connection.bot.launch_hook(func, **data)
 
 
 def identify(connection):
@@ -251,7 +240,7 @@ def on_msg(msg, conn):
     for plugin in msg.conn.bot.message_hooks:
         for func in msg.conn.bot.message_hooks[plugin]:
             try:
-                res = func(msg)
+                res = conn.bot.launch_hook(func, msg=msg)
             except Exception as e:
                 conn.log.exception(e)
                 msg.target.send_message(f"{func} in {func.__module__} just broke. Who wrote it? I want their head. "
