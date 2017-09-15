@@ -101,7 +101,7 @@ class Connection:
         self.buffer += data
         while b"\r\n" in self.buffer:
             raw, self.buffer = self.buffer.split(b"\r\n", 1)
-            line = raw.decode()
+            line = raw.decode(errors="replace")
             self.log.ircin(line)
             if line[0] == "@":
                 tags, line = line.split(None, 1)
