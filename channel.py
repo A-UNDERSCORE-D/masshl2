@@ -20,6 +20,7 @@ class Channel:
         self.receivingnames = False
         self.nickignore = []
         self.maskignore = []
+        self.admins = []
         self.connection = connection
 
     def __eq__(self, other: str) -> bool:
