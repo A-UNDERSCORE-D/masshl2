@@ -3,11 +3,6 @@ from typing import TYPE_CHECKING, Dict, Callable, NamedTuple
 import permissions
 if TYPE_CHECKING:
     from parser import Message
-# from logger import *
-
-# TODO: for masshl, channel notice checking too
-
-# COMMANDS: Dict[str, List[Union[Callable, List, None]]] = {}
 
 
 class CommandHook(NamedTuple):

@@ -1,7 +1,6 @@
 import re
 import typing
 
-
 if typing.TYPE_CHECKING:
     from user import User
     from channel import Channel

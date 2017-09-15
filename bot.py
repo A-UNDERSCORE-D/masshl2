@@ -1,13 +1,14 @@
-from connection import Connection
-from config import Config
-import time
-from selectors import DefaultSelector
 import importlib
-import pathlib
 import inspect
-from logger import Logger
+import pathlib
+import time
 from collections import defaultdict
+from selectors import DefaultSelector
 from typing import Dict, List, Callable
+
+from config import Config
+from connection import Connection
+from logger import Logger
 
 
 class Bot:

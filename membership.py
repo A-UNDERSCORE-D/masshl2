@@ -2,8 +2,8 @@ import weakref
 
 
 class Membership:
-    def __init__(self, channel, user, isop: bool =False, ishop: bool =False,
-                 isvoice: bool =False, isadmin: bool =False):
+    def __init__(self, channel, user, isop: bool = False, ishop: bool = False,
+                 isvoice: bool = False, isadmin: bool = False):
         self.isop = isop
         self.ishop = ishop
         self.isvoice = isvoice

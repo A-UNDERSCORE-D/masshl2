@@ -5,7 +5,6 @@ from channel import Channel
 from logger import *
 
 # TODO: CTCP responses
-# TODO: on nick function
 
 HANDLERS = {}
 
@@ -15,6 +14,7 @@ def raw(*cmds):
         for cmd in cmds:
             HANDLERS.setdefault(cmd.upper(), []).append(func)
         return func
+
     return _decorate
 
 

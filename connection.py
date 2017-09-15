@@ -4,7 +4,6 @@ from selectors import EVENT_READ
 from weakref import WeakValueDictionary
 
 import parser
-
 from handler import handler
 from logger import Logger
 from user import User
@@ -78,11 +77,6 @@ class Connection:
 
     def read(self):
         if self.connected:
-            # readable, _, _ = select.select([self.socket], [], [], 5)
-            # events = self.selector.select()
-            # for readable, _ in events:
-            #     if self.socket in readable:
-            #         print(type(readable))
             data = self.socket.recv(65535)
             if not data:
                 self.close()

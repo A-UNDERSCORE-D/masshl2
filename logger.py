@@ -1,7 +1,6 @@
-import time
-import sys
 import logging
 import logging.config
+
 
 # TODO: Use logging or look into it
 
@@ -121,7 +120,7 @@ def logchan(channel):
     for user in channel.memberships:
         usero = channel.memberships[user]
         prefix = usero.prefix()
-        channel.connection.log.debug(" `-" + prefix + user,)
+        channel.connection.log.debug(" `-" + prefix + user, )
 
 
 def centered(msg):
