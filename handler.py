@@ -1,4 +1,5 @@
 import base64
+from sys import exc_info
 
 import parser
 from channel import Channel
@@ -243,8 +244,10 @@ def on_msg(msg, conn):
                 res = conn.bot.launch_hook(func, msg=msg)
             except Exception as e:
                 conn.log.exception(e)
-                msg.target.send_message(f"{func} in {func.__module__} just broke. Who wrote it? I want their head. "
-                                        f"\"{e}\"")
+                ex_type, ex_info, ex_trace = exc_info()
+                msg.target.send_message(f"{func.__name__} in {func.__module__} just broke. Who wrote it? "
+                                        f"I want their head. Exception: {ex_type.__name__}: {ex_info}. "
+                                        f"see stdout for trace")
             else:
                 if res:
                     todo.append(res)
