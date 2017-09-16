@@ -25,20 +25,23 @@ def command(*cmds, perm=None):
 
 @message
 def on_msg(msg: 'Message'):
-    if not msg.message.startswith(msg.conn.cmdprefix):
-        return
-
-    cmd = msg.s_msg[0][1:]
-
-    if len(msg) > 1:
-        args = msg.s_msg[1:]
+    args = []
+    if msg.message.startswith(msg.conn.cmdprefix):
+        cmd = msg.s_msg[0][1:]
+        if len(msg) > 2:
+            args = msg.s_msg[1:]
+    elif msg.startswith(msg.conn.nick):
+        cmd = msg.s_msg[1]
+        if len(msg) > 1:
+            args = msg.s_msg[2:]
     else:
-        args = []
+        return
 
     handler = COMMANDS.get(cmd)
     if handler and callable(handler.callback):
         if handler.perms and not permissions.check(msg, handler.perms):
-            return "Perm check failed."
+            msg.origin.send_notice("Sorry, you are not allowed to use this command")
+            return
         func = handler.callback
         data = {
             "msg": msg,
@@ -118,12 +121,12 @@ def cmd_part(args, conn):
     conn.part(chans, reason)
 
 
-@command("eval")
+@command("eval", perm=["bot_control"])
 def command_eval(bot, conn):
     return "Perms Checked"
 
 
-@command("config")
+@command("config", perm=["bot_control"])
 def cmd_config(bot, msg):
     if len(msg) < 1:
         return "config requires an argument"
