@@ -49,3 +49,18 @@ class Message:
 
     def __len__(self):
         return len(self.s_msg)
+
+    def __eq__(self, other):
+        if self.message == other:
+            return True
+        return False
+
+    def __contains__(self, item):
+        if item in self.s_msg or item in self.message:
+            return True
+        return False
+
+    def startswith(self, other: str):
+        if self.message.startswith(other):
+            return True
+        return False
