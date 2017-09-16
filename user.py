@@ -40,4 +40,4 @@ class User:
         self.connection.write(f"PRIVMSG {self.nick} :{msg}")
 
     def send_notice(self, msg: str):
-        self.connection.write(f"NOTICE {self.nick} : {msg}")
+        self.connection.write(f"NOTICE {self.nick} :{msg}")
