@@ -23,6 +23,7 @@ class Connection:
         self.nspass = config["nspass"]
         self.commands = config["commands"]
         self.adminchan = config["adminchan"]
+        self.admins = config["admins"]
         self.cmdprefix = config["cmdprefix"]
         self.global_nickignore = config["global_nickignore"]
         self.global_maskignore = config["global_maskignore"]
