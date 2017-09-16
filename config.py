@@ -20,7 +20,9 @@ DEFAULT_CONFIG = {
             "adminchan":
                 "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence",
             "global_nickignore": [l for l in string.ascii_lowercase],
-            "global_maskignore": ""
+            "global_maskignore": "",
+            # debug or similar configs
+            "print_raw": True
         },
     },
 
@@ -36,7 +38,9 @@ class Config(dict):
         self.update(DEFAULT_CONFIG)
         self.load(self.name)
 
-    def load(self, name):
+    def load(self, name=None):
+        if not name:
+            name = self.name
         if not os.path.exists(name + ".json"):
             with open(name + ".json", "w") as f:
                 json.dump(DEFAULT_CONFIG, f, indent=2)
@@ -44,6 +48,15 @@ class Config(dict):
         with open(name + ".json") as f:
             self.update(json.load(f))
 
-    def save(self, name):
-        with open(name) as f:
+    def save(self, name=None):
+        if not name:
+            name = self.name
+        with open(name, "w") as f:
+            json.dump(self, f, indent=2)
+
+    def update_f_m(self):
+        self.update(DEFAULT_CONFIG)
+        with open(self.name + ".json") as f:
+            self.update(json.load(f))
+        with open(self.name + ".json", "w") as f:
             json.dump(self, f, indent=2)
