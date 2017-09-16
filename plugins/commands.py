@@ -1,5 +1,6 @@
 from handler import message
 from typing import TYPE_CHECKING, Dict, Callable, NamedTuple
+
 import permissions
 if TYPE_CHECKING:
     from parser import Message
@@ -67,7 +68,7 @@ def reload(msg: 'Message', args):
                 continue
             resp = msg.bot.load_plugin(plugin_name)
             if resp:
-                msg.target.send_message(str(resp))
+                msg.target.send_message(f"{plugin_name} failed to load. Error: '{resp}'")
             else:
                 msg.target.send_message(f"Reloaded '{plugin_name}' successfully")
 
@@ -117,6 +118,35 @@ def cmd_part(args, conn):
     conn.part(chans, reason)
 
 
-@command("eval", perm=["admin"])
+@command("eval")
 def command_eval(bot, conn):
     return "Perms Checked"
+
+
+@command("config")
+def cmd_config(bot, msg):
+    if len(msg) < 1:
+        return "config requires an argument"
+    subcommand = msg.s_msg[1]
+    if subcommand == "save":
+        name = None
+        if len(msg) > 2:
+            name = msg.s_msg[2]
+        msg.target.send_message(str(name))
+        msg.target.send_message(len(msg))
+        bot.config.save(name)
+
+    elif subcommand == "load":
+        name = None
+        if len(msg) > 2:
+            name = msg[2]
+        bot.config.load(name)
+
+    elif subcommand == "update":
+        bot.config.update_f_m()
+
+
+@command("dump_config")
+def cmd_dumpcfg(bot):
+    print(bot.config)
+    return "dumped to stdout."
