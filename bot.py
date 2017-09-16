@@ -99,6 +99,6 @@ class Bot:
         sig = inspect.signature(func)
         args = []
         for arg in sig.parameters:
-            assert arg in kwargs
+            assert arg in kwargs, f"Callback requested an argument that the hook launcher was not passed. it was '{arg}"
             args.append(kwargs[arg])
         return func(*args)
