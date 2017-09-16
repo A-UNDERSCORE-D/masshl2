@@ -94,11 +94,12 @@ class Bot:
                 self.message_hooks[name].append(func)
                 delattr(func, "_isMessageCallback")
 
-    @staticmethod
-    def launch_hook(func: Callable, **kwargs):
+    def launch_hook(self, func: Callable, **kwargs):
         sig = inspect.signature(func)
+        kwargs["bot"] = self
         args = []
         for arg in sig.parameters:
-            assert arg in kwargs, f"Callback requested an argument that the hook launcher was not passed. it was '{arg}"
+            assert arg in kwargs, \
+                f"Callback requested an argument that the hook launcher was not passed. it was '{arg}'"
             args.append(kwargs[arg])
         return func(*args)
