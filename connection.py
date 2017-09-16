@@ -26,6 +26,7 @@ class Connection:
         self.cmdprefix = config["cmdprefix"]
         self.global_nickignore = config["global_nickignore"]
         self.global_maskignore = config["global_maskignore"]
+        self.print_raw = config["print_raw"]
         self.bot = bot
         self.name = name
 
@@ -86,17 +87,20 @@ class Connection:
     def write(self, data):
         if isinstance(data, bytes):
             self.socket.send(data + b"\r\n")
-            self.log.ircout(data.decode())
+            if self.print_raw:
+                self.log.ircout(data.decode())
         else:
             self.socket.send((data + "\r\n").encode())
-            self.log.ircout(data)
+            if self.print_raw:
+                self.log.ircout(data)
 
     def parse(self, data):
         self.buffer += data
         while b"\r\n" in self.buffer:
             raw, self.buffer = self.buffer.split(b"\r\n", 1)
             line = raw.decode(errors="replace")
-            self.log.ircin(line)
+            if self.print_raw:
+                self.log.ircin(line)
             if line[0] == "@":
                 tags, line = line.split(None, 1)
             else:
