@@ -298,9 +298,6 @@ def onmode(connection, args):
             logchan(chan)
 
 
-# TODO: Deal with parts/kicks for myself
-
-
 @raw("PART")
 def onpart(connection, prefix, args):
     chan_name = args[0]
