@@ -64,3 +64,6 @@ class Message:
         if self.message.startswith(other):
             return True
         return False
+
+    def lower(self):
+        return self.message.lower()
