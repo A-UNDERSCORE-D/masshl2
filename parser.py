@@ -1,9 +1,9 @@
 import re
 import typing
+from channel import Channel
 
 if typing.TYPE_CHECKING:
     from user import User
-    from channel import Channel
     from connection import Connection
 
 PREFIX_RE = re.compile(r'(?P<nick>.+?)(?:!(?P<user>.+?))?(?:@(?P<host>.+?))?')
@@ -46,7 +46,7 @@ class Message:
 
     @property
     def is_chan_message(self) -> bool:
-        return self.origin[0] in self.conn.chantypes
+        return isinstance(self.target, Channel)
 
     def __str__(self):
         return self.prefix + " " + " ".join(self.args)
@@ -55,19 +55,13 @@ class Message:
         return len(self.s_msg)
 
     def __eq__(self, other):
-        if self.message == other:
-            return True
-        return False
+        return self.message == other
 
     def __contains__(self, item):
-        if item in self.s_msg or item in self.message:
-            return True
-        return False
+        return item in self.s_msg or item in self.message
 
     def startswith(self, other: str):
-        if self.message.startswith(other):
-            return True
-        return False
+        return self.message.startswith(other)
 
     def lower(self):
         return self.message.lower()
