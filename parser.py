@@ -44,6 +44,10 @@ class Message:
             self.conn.log.debug("WTF? Got a message pointed at nothing")
         self.message = args[1]
 
+    @property
+    def is_chan_message(self) -> bool:
+        return self.origin[0] in self.conn.chantypes
+
     def __str__(self):
         return self.prefix + " " + " ".join(self.args)
 
