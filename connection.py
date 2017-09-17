@@ -27,6 +27,7 @@ class Connection:
         self.cmdprefix = config["cmdprefix"]
         self.global_nickignore = config["global_nickignore"]
         self.global_maskignore = config["global_maskignore"]
+        self.bot_nicks = config["bot_nicks"]
         self.print_raw = config["print_raw"]
         self.bot = bot
         self.name = name
