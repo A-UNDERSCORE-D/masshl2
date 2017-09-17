@@ -28,11 +28,11 @@ def on_msg(msg: 'Message'):
     args = []
     if msg.message.startswith(msg.conn.cmdprefix):
         cmd = msg.s_msg[0][1:]
-        if len(msg) > 2:
+        if len(msg) > 1:
             args = msg.s_msg[1:]
     elif msg.startswith(msg.conn.nick):
         cmd = msg.s_msg[1]
-        if len(msg) > 1:
+        if len(msg) > 2:
             args = msg.s_msg[2:]
     else:
         return
@@ -58,7 +58,7 @@ def msgme(msg: 'Message', args):
     msg.origin.send_message("requested")
 
 
-@command("reload")
+@command("reload")#, perm=["bot_control"])
 def reload(msg: 'Message', args):
     if len(args) < 1:
         msg.target.send_message("reload requires an argument")
