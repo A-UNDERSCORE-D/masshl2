@@ -62,6 +62,8 @@ class Bot:
         print(self.message_hooks)
 
     def load_plugin(self, name):
+        if not name.startswith("plugins."):
+            name = "plugins." + name
         try:
             if name in self.plugins:
                 self.unload(name)
