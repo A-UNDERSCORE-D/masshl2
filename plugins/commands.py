@@ -1,4 +1,4 @@
-from handler import message
+from handler import hook_message
 from typing import TYPE_CHECKING, Dict, Callable, NamedTuple
 
 import permissions
@@ -23,7 +23,7 @@ def command(*cmds, perm=None):
     return _decorate
 
 
-@message
+@hook_message
 def on_msg(msg: 'Message'):
     args = []
     if msg.message.startswith(msg.conn.cmdprefix):
