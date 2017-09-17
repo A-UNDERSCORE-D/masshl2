@@ -219,7 +219,7 @@ def onjoin(connection, prefix, args):
     logall(connection)
 
 
-def message(func):
+def hook_message(func):
     setattr(func, "_isMessageCallback", None)
     return func
 
@@ -254,8 +254,8 @@ def on_msg(msg, conn):
     for res in todo:
         if callable(res):
             res()
-        elif isinstance(res, str):
-            msg.target.send_message(res)
+        else:
+            msg.target.send_message(str(res))
 
 
 @raw("MODE")
