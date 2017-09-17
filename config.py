@@ -20,6 +20,7 @@ DEFAULT_CONFIG = {
             "adminchan":
                 "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence",
             "global_nickignore": [l for l in string.ascii_lowercase],
+            "bot_nicks": [],
             "global_maskignore": "",
             # debug or similar configs
             "print_raw": True
