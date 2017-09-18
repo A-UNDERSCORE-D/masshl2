@@ -185,7 +185,8 @@ class Connection:
 
     @property
     def adminchan(self) -> 'Channel':
-        return self.channels.get(self._adminchan, None)
+        """Plugins should not store a reference to this"""
+        return self.channels.get(self._adminchan, None) or self._adminchan
 
     def log_adminchan(self, msg: str):
         self.adminchan.send_message(msg)

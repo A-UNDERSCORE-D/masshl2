@@ -161,7 +161,7 @@ def onendmotd(connection):
         identify(connection)
     for command in connection.commands:
         connection.write(command)
-    connection.join(connection._adminchan)
+    connection.join(connection.adminchan)
     connection.join(connection.joinchannels)
 
 
