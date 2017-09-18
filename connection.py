@@ -71,6 +71,7 @@ class Connection:
         self.server = ""
         self.maxJtargets = 0
 
+# TODO: Support IRCv3.2 CAPS, CAP LS 302
     def connect(self):
         if self.is_ssl:
             self.socket = ssl.wrap_socket(self.socket)
@@ -90,6 +91,8 @@ class Connection:
                 self.parse(data)
 
     def write(self, data):
+        if not self.connected:
+            return
         if isinstance(data, bytes):
             self.socket.send(data + b"\r\n")
             if self.print_raw:
