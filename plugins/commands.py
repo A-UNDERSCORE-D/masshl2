@@ -153,3 +153,13 @@ def cmd_config(bot, msg):
 def cmd_dumpcfg(bot):
     print(bot.config)
     return "dumped to stdout."
+
+
+@command("toggle_log", perm=["bot_control"])
+def cmd_logtoggle(conn):
+    conn.print_raw = not conn.print_raw
+
+
+@command("restart", perm=["bot_control"])
+def cmd_restart(bot, args):
+    bot.restart()
