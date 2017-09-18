@@ -18,13 +18,18 @@ class Channel:
         self.watched = watched
         self.hasmodes = None
         self.receivingnames = False
-        self.nickignore = []
-        self.maskignore = []
         self.admins = []
         self.connection = connection
 
+        # masshl stuff
+        self.nick_ignore = []
+        self.mask_ignore = []
+
     def __eq__(self, other: str) -> bool:
         return self.name.lower() == other.lower()
+
+    def __str__(self):
+        return self.name
 
     def adduser(self, connection, user: User, isop: bool = False,
                 ishop: bool = False, isvoice: bool = False,
