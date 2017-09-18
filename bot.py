@@ -17,6 +17,7 @@ class Bot:
         self.selector = DefaultSelector()
         self.config = Config()
         self.running = False
+        self.is_restarting = False
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
         self.message_hooks: Dict[str, List[Callable]] = defaultdict(list)
@@ -43,6 +44,7 @@ class Bot:
             for file, _ in event:
                 file.fileobj.read()
         self.selector.close()
+        return self.is_restarting
 
     def stop(self, reason="Controller requested stop"):
         for connection in self.connections:
@@ -54,6 +56,10 @@ class Bot:
                 connection.close()
 
         self.running = False
+
+    def restart(self, reason="Controller requested restart"):
+        self.is_restarting = True
+        self.stop(reason)
 
     def _load_plugins(self):
         path = pathlib.Path("plugins").resolve().relative_to(self.cwd)

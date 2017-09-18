@@ -1,5 +1,7 @@
 import signal
 import sys
+import time
+import os
 from random import choice
 
 from bot import Bot
@@ -17,23 +19,31 @@ exits = ["Socket Closed. This socket is no more, it has ceased to be. Its expire
 def run():
     print("MASSHL 2.0")
     print("By A_D")
-    # config = Config()
     original_handler = signal.getsignal(signal.SIGINT)
-    # connection = Connection(config=config, selector=selector)
+    stopped = False
     bot = Bot()
-
-    # connection.connect()
-    # selector.register(connection, EVENT_READ)
 
     # Called when we receive SIGINT, exits the connection gracefully
     def interrupted(signo, frame):
-        bot.stop("Caught SIGINT")
+        if bot:
+            bot.stop("Caught SIGINT")
+        else:
+            nonlocal stopped
+            stopped = True
         # bot.selector.close()
+
         signal.signal(signal.SIGINT, original_handler)
 
     signal.signal(signal.SIGINT, interrupted)
 
-    bot.run()
+    restart = bot.run()
+    if restart:
+        time.sleep(0.5)
+        if stopped:
+            print("Stopped while restarting.")
+        else:
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+
     print(choice(exits), file=sys.stderr)
 
 
