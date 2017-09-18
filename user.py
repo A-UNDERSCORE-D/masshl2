@@ -1,5 +1,5 @@
 import weakref
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union
 from weakref import WeakValueDictionary
 
 if TYPE_CHECKING:
@@ -14,6 +14,9 @@ class User:
         self.memberships = WeakValueDictionary()
         self.connection = weakref.proxy(connection)
 
+        # masshl stuff
+        self.last_ping = [0, ""]
+
     def __eq__(self, other) -> bool:
         if isinstance(other, User):
             other = other.nick
@@ -22,6 +25,9 @@ class User:
             return self.nick.lower() == other.lower()
 
         return NotImplemented
+
+    def __str__(self):
+        return self.nick
 
     @property
     def mask(self) -> str:
