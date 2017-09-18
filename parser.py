@@ -21,7 +21,7 @@ class Message:
         self.prefix = prefix
         self.type = msg_type
         self.target: typing.Union[User, Channel]
-        self.origin: typing.Union[User, None]
+        self.origin: typing.Optional[User]
         self.message: str = ""
         self._parse_msg(prefix, args)
         self.s_msg = self.message.split(" ")
