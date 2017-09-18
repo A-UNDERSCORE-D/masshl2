@@ -2,32 +2,33 @@ from handler import hook_message
 from parser import Message
 
 
-def scan_msg(msg: 'Message'):
-    count = 0
-    # Get the nick list from the keys of the membership dict on the channel object
-    nick_list = msg.target.memberships.keys()
-    checked_nicks = set()
-    lower_msg = msg.lower()
-    msg.conn.log.debug(nick_list)
-    for nick in nick_list:
-        nick = nick.lower()
-        if nick in checked_nicks:
+def sanitise_nicklist(msg: 'Message') -> set:
+    nicks = set()
+    for nick in msg.target.memberships:
+        if len(nick) < 2 or nick == msg.origin or nick in msg.conn.global_nickignore or nick in msg.target.nick_ignore:
             continue
+        nicks.add(nick)
+    return nicks
 
-        if nick in msg.conn.bot_nicks:
-            count += 2
-        else:
-            if nick in lower_msg:
+
+def check_msg(msg: 'Message') -> int:
+    nick_list = sanitise_nicklist(msg)
+    checked_nicks = set()
+    count = 0
+
+    for nick in nick_list:
+        if nick in msg and nick not in checked_nicks:
+            checked_nicks.add(nick)
+            count += 1
+            if nick in msg.conn.bot_nicks:
                 count += 1
-                checked_nicks.add(nick)
-        if count >= msg.target.count:
-            return count
-        # msg.conn.log.debug(f"Count: {count}")
     return count
 
 
 @hook_message
 def on_msg(msg: 'Message'):
     if msg.is_chan_message:
-        count = scan_msg(msg)
-        # return f"count was: {count}"
+        count = check_msg(msg)
+        msg.conn.log(f"Count: {count}")
+        if count > 0:
+            return f"count was: {count}"
