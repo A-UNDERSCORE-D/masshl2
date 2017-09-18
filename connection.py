@@ -6,7 +6,10 @@ from weakref import WeakValueDictionary
 import parser
 from handler import handler
 from logger import Logger
+from typing import TYPE_CHECKING
 from user import User
+if TYPE_CHECKING:
+    from channel import Channel
 
 
 class Connection:
@@ -22,7 +25,7 @@ class Connection:
         self.nsuser = config["nsident"]
         self.nspass = config["nspass"]
         self.commands = config["commands"]
-        self.adminchan = config["adminchan"]
+        self._adminchan = config["adminchan"]
         self.admins = config["admins"]
         self.cmdprefix = config["cmdprefix"]
         self.global_nickignore = config["global_nickignore"]
@@ -179,3 +182,10 @@ class Connection:
         ]
         for chan in to_delete:
             chan.deluser(user)
+
+    @property
+    def adminchan(self) -> 'Channel':
+        return self.channels.get(self._adminchan, None)
+
+    def log_adminchan(self, msg: str):
+        self.adminchan.send_message(msg)
