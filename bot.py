@@ -48,7 +48,9 @@ class Bot:
         self.selector.close()
         return self.is_restarting
 
-    def stop(self, reason="Controller requested stop"):
+    def stop(self, reason=None):
+        if reason is None:
+            reason = "Controller requested stop"
         for connection in self.connections:
             if not connection.hasquit:
                 connection.quit(reason)
@@ -59,7 +61,9 @@ class Bot:
 
         self.running = False
 
-    def restart(self, reason="Controller requested restart"):
+    def restart(self, reason=None):
+        if reason is None:
+            reason = "Controller requested restart"
         self.is_restarting = True
         self.stop(reason)
 
