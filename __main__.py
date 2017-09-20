@@ -42,6 +42,7 @@ def run():
         if stopped:
             print("Stopped while restarting.")
         else:
+            os.chdir(bot.cwd)
             os.execv(sys.executable, [sys.executable] + sys.argv)
 
     print(choice(exits), file=sys.stderr)
