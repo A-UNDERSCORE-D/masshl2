@@ -19,6 +19,11 @@ def raw(*cmds):
     return _decorate
 
 
+def hook_load(func):
+    setattr(func, "_isOnLoadCallback", None)
+    return func
+
+
 def handler(connection, prefix, tags, command, args):
     data = {
         "connection": connection,

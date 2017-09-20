@@ -90,6 +90,7 @@ class Bot:
             setattr(imported_module, "_masshl_loaded", None)
             self.plugins[name] = imported_module
             self._load_msg_hooks(imported_module, name)
+            self._run_onload_hooks(imported_module, name)
 
     def unload(self, name):
         if not name.startswith("plugins."):
@@ -105,6 +106,13 @@ class Bot:
                 print(func.__module__, func)
                 self.message_hooks[name].append(func)
                 delattr(func, "_isMessageCallback")
+
+    def _run_onload_hooks(self, plugin, name):
+        for func in plugin.__dict__.values():
+            if hasattr(func, "_isOnLoadCallback"):
+                data = {"name": name}
+                self.launch_hook(func, **data)
+                delattr(func, "_isOnLoadCallback")
 
     def launch_hook(self, func: Callable, **kwargs):
         sig = inspect.signature(func)
