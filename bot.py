@@ -13,7 +13,7 @@ from logger import Logger
 
 
 class Bot:
-    def __init__(self):
+    def __init__(self, name="masshl"):
         self.connections = []
         self.selector = DefaultSelector()
         self.config = Config()
@@ -22,8 +22,9 @@ class Bot:
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
         self.message_hooks: Dict[str, List[Callable]] = defaultdict(list)
-        self.name = "masshl"
+        self.name = name
         self.log = Logger(self)
+        self.storage = {}
 
     def run(self):
         self._load_plugins()

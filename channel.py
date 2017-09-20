@@ -21,9 +21,7 @@ class Channel:
         self.admins = []
         self.connection = connection
 
-        # masshl stuff
-        self.nick_ignore = []
-        self.mask_ignore = []
+        self.storage = {}
 
     def __eq__(self, other: str) -> bool:
         return self.name.lower() == other.lower()

@@ -71,6 +71,8 @@ class Connection:
         self.server = ""
         self.maxJtargets = 0
 
+        self.storage = {}
+
 # TODO: Support IRCv3.2 CAPS, CAP LS 302
     def connect(self):
         if self.is_ssl:

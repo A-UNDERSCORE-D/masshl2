@@ -13,9 +13,7 @@ class User:
         self.host = host
         self.memberships = WeakValueDictionary()
         self.connection = weakref.proxy(connection)
-
-        # masshl stuff
-        self.last_ping = [0, ""]
+        self.storage = {}
 
     def __eq__(self, other) -> bool:
         if isinstance(other, User):
