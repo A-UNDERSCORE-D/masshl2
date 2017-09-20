@@ -242,11 +242,11 @@ def onnotice(connection, args, prefix):
 
 
 def on_msg(msg, conn):
-    todo = []
+    todos = []
     for plugin in msg.conn.bot.message_hooks:
         for func in msg.conn.bot.message_hooks[plugin]:
             try:
-                res = conn.bot.launch_hook(func, msg=msg)
+                todo = conn.bot.launch_hook(func, msg=msg)
             except Exception as e:
                 conn.log.exception(e)
                 ex_type, ex_info, ex_trace = exc_info()
@@ -254,13 +254,15 @@ def on_msg(msg, conn):
                                         f"I want their head. Exception: {ex_type.__name__}: {ex_info}. "
                                         f"see stdout for trace")
             else:
-                if res:
-                    todo.append(res)
-    for res in todo:
-        if callable(res):
-            res()
+                if todo:
+                    todos.append(todo)
+    for todo in todos:
+        if callable(todo):
+            resp = todo()
+            if resp:
+                msg.target.send_message(str(resp))
         else:
-            msg.target.send_message(str(res))
+            msg.target.send_message(str(todo))
 
 
 @raw("MODE")
