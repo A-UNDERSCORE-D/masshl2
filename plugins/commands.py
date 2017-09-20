@@ -84,6 +84,7 @@ def cmd_unload(args, bot):
         def todo():
             for arg in args:
                 bot.unload(arg)
+            return f"{' '.join(args)} unloaded"
         return todo
     else:
         return "This command requires an argument"
