@@ -173,4 +173,4 @@ def cmd_logtoggle(conn):
 
 @command("restart", perm=["bot_control"])
 def cmd_restart(bot, args):
-    bot.restart()
+    bot.restart(" ".join(args) if args else None)
