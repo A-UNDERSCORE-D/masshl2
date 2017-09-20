@@ -92,6 +92,8 @@ class Bot:
             self._load_msg_hooks(imported_module, name)
 
     def unload(self, name):
+        if not name.startswith("plugins."):
+            name = "plugins." + name
         if name in self.plugins:
             del self.plugins[name]
         if name in self.message_hooks:
