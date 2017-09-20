@@ -25,7 +25,9 @@ DEFAULT_CONFIG = {
             "print_raw":         True
         },
     },
+    "plugin_data": {
 
+    },
     "debug":       True,
 }
 
