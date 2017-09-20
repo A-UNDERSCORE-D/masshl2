@@ -58,7 +58,7 @@ def msgme(msg: 'Message', args):
     msg.origin.send_message("requested")
 
 
-@command("reload")#, perm=["bot_control"])
+@command("reload", perm=["bot_control"])
 def reload(msg: 'Message', args):
     if len(args) < 1:
         msg.target.send_message("reload requires an argument")
@@ -76,6 +76,17 @@ def reload(msg: 'Message', args):
                 msg.target.send_message(f"Reloaded '{plugin_name}' successfully")
 
     return todo
+
+
+@command("unload", perm=["bot_control"])
+def cmd_unload(args, bot):
+    if args:
+        def todo():
+            for arg in args:
+                bot.unload(arg)
+        return todo
+    else:
+        return "This command requires an argument"
 
 
 @command("say")
