@@ -2,6 +2,7 @@ import importlib
 import inspect
 import pathlib
 import time
+import gc
 from collections import defaultdict
 from selectors import DefaultSelector
 from typing import Dict, List, Callable
@@ -33,7 +34,7 @@ class Bot:
                 debug=self.config["debug"]
             )
             self.connections.append(temp_connection)
-
+        gc.collect()
         for connection in self.connections:
             connection.connect()
 
