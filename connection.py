@@ -130,14 +130,17 @@ class Connection:
                 i += 1
             # handler(self, prefix, tags, cmd, args)
             data = {
-                "conn": self,
+                "connection": self,
                 "prefix": prefix,
                 "tags": tags,
                 "cmd": cmd,
                 "args": args
             }
-            self.bot.call_hook("raw", **data)
-            self.bot.call_hook("raw_" + cmd, **data)
+            responses = self.bot.call_hook("raw", **data)
+            responses.extend(self.bot.call_hook("raw_" + cmd, **data))
+            for hook, resp in responses:
+                if isinstance(responses, Exception):
+                    self.log.exception(resp)
 
     def join(self, channels):
         chanstojoin: str = ""
