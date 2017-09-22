@@ -161,7 +161,7 @@ class Bot:
         todos = []
         name = name.lower()
         if name not in self.hooks:
-            return
+            return todos
         for hook in self.hooks[name]:
             try:
                 resp = self.launch_hook_func(hook.func, **kwargs)
