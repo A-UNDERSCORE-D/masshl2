@@ -4,7 +4,7 @@ from selectors import EVENT_READ
 from weakref import WeakValueDictionary
 
 import parser
-from handler import handler
+# from handler import handler
 from logger import Logger
 # from typing import TYPE_CHECKING
 from user import User
@@ -128,7 +128,16 @@ class Connection:
                     args[i] = " ".join(args[i:])[1:]
                     del args[i + 1:]
                 i += 1
-            handler(self, prefix, tags, cmd, args)
+            # handler(self, prefix, tags, cmd, args)
+            data = {
+                "conn": self,
+                "prefix": prefix,
+                "tags": tags,
+                "cmd": cmd,
+                "args": args
+            }
+            self.bot.call_hook("raw", **data)
+            self.bot.call_hook("raw_" + cmd, **data)
 
     def join(self, channels):
         chanstojoin: str = ""
