@@ -1,4 +1,3 @@
-from handler import hook_message
 from hook import hook
 from typing import TYPE_CHECKING, Dict, Callable, NamedTuple
 
@@ -142,7 +141,7 @@ def command_eval(bot, conn):
 
 @hook("Message")
 def test_hook_01(msg, bot):
-    print(msg, bot.ThisIntentionallyBreaks)
+    print(msg, bot)
 
 
 @command("config", perm=["bot_control"])
