@@ -10,7 +10,7 @@ from typing import Dict, List, Callable
 from config import Config
 from connection import Connection
 from logger import Logger
-
+from hook import Hook
 
 class Bot:
     def __init__(self, name="masshl"):
@@ -22,7 +22,7 @@ class Bot:
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
         self.message_hooks: Dict[str, List[Callable]] = defaultdict(list)
-        self.hooks: Dict[str, Dict[str, List[Callable]]] = defaultdict(lambda: defaultdict(list))
+        self.hooks: Dict[str, List[Hook]] = defaultdict(list)
         self.name = name
         self.log = Logger(self)
         self.storage = {}
@@ -108,6 +108,11 @@ class Bot:
             del self.plugins[name]
         if name in self.message_hooks:
             del self.message_hooks[name]
+        for hooktype in self.hooks.values():
+            for hook in reversed(hooktype):
+                if hook.plugin == name:
+                    print(f"REMOVING HOOK: {hook}")
+                hooktype.remove(hook)
 
     def _load_msg_hooks(self, plugin, name):
         for func in plugin.__dict__.values():
@@ -137,11 +142,12 @@ class Bot:
             self.log(f"loading new hook {func}")
             hooks = getattr(func, "_IsHook")
             for hook in hooks:
-                self.hooks[hook][name].append(func)
+                self.hooks[hook].append(Hook(name, func))
             delattr(func, "_IsHook")
 
     def launch_hook_func(self, func: Callable, **kwargs):
         sig = inspect.signature(func)
+        print(f"CALLING {func}")
         kwargs["bot"] = self
         args = []
         for arg in sig.parameters:
@@ -154,13 +160,12 @@ class Bot:
         todos = []
         if name not in self.hooks:
             return
-        for plugin in self.hooks[name]:
-            for func in self.hooks[name][plugin]:
-                try:
-                    resp = self.launch_hook_func(func, **kwargs)
-                except Exception as e:
-                    todos.append((plugin, e, func))
-                else:
-                    todos.append((plugin, resp, None))
+        for hook in self.hooks[name]:
+            try:
+                resp = self.launch_hook_func(hook.func, **kwargs)
+            except Exception as e:
+                todos.append((hook, e))
+            else:
+                todos.append((hook, resp))
         return todos
 

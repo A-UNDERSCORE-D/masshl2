@@ -261,19 +261,19 @@ def on_msg(msg: 'Message', conn: 'Connection'):
                 if todo:
                     todos.append(todo)
 
-    print("CALLING NEW HOOK")
     temp = conn.bot.call_hook("message", msg=msg)
     new_todos.extend(temp or [])
-    for plugin, resp, func in new_todos:
+    for hook, resp in new_todos:
         if isinstance(resp, Exception):
-            conn.log_adminchan(f"{func.__name__} in {func.__module__} just broke. Who wrote it? I want their head. "
-                               f"Exception: {type(resp).__name__}: {str(resp)}. see stdout for trace")
+            conn.log_adminchan(f"{hook.func.__name__} in {hook.func.__module__} just broke. Who wrote it? "
+                               f"I want their head. Exception: {type(resp).__name__}: {str(resp)}. "
+                               f"see stdout for trace")
         elif callable(resp):
             respmsg = resp()
             if respmsg:
                 msg.target.send_message(str(respmsg))
         elif resp:
-            print(plugin, resp)
+            print(hook, resp)
             msg.target.send_message(str(resp))
 
     for todo in todos:

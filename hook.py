@@ -1,3 +1,6 @@
+from typing import Callable
+
+
 def hook(*name):
     def _decorate(func):
         try:
@@ -8,4 +11,12 @@ def hook(*name):
         hook_list.extend(_hook.lower() for _hook in name)
         return func
     return _decorate
-# TODO: Hook object with the plugin name one it, this removes a level to the hook dict
+
+
+class Hook:
+    def __init__(self, plugin: str, func: Callable):
+        self.plugin: str = plugin
+        self.func: Callable = func
+
+    def __str__(self):
+        return f"{self.plugin}: {self.func}"
