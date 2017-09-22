@@ -29,6 +29,7 @@ class Bot:
 
     def run(self):
         self._load_plugins()
+        self.log.debug(self.hooks)
         for network in self.config["connections"]:
             temp_connection = Connection(
                 config=self.config["connections"][network],
@@ -139,9 +140,9 @@ class Bot:
         for func in plugin.__dict__.values():
             if not hasattr(func, "_IsHook"):
                 continue
-            self.log(f"loading new hook {func}")
             hooks = getattr(func, "_IsHook")
             for hook in hooks:
+                self.log(f"loading new hook {hook}: {func}")
                 self.hooks[hook].append(Hook(name, func))
             delattr(func, "_IsHook")
 
@@ -158,6 +159,7 @@ class Bot:
 
     def call_hook(self, name, **kwargs):
         todos = []
+        name = name.lower()
         if name not in self.hooks:
             return
         for hook in self.hooks[name]:
