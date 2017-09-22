@@ -6,10 +6,9 @@ from weakref import WeakValueDictionary
 import parser
 from handler import handler
 from logger import Logger
-from typing import TYPE_CHECKING
+# from typing import TYPE_CHECKING
 from user import User
-if TYPE_CHECKING:
-    from channel import Channel
+from channel import Channel
 
 
 class Connection:
@@ -194,4 +193,7 @@ class Connection:
         return self.channels.get(self._adminchan, None) or self._adminchan
 
     def log_adminchan(self, msg: str):
-        self.adminchan.send_message(msg)
+        if isinstance(self.adminchan, Channel):
+            self.adminchan.send_message(msg)
+        else:
+            self.log.error(msg)
