@@ -49,7 +49,7 @@ class Message:
         return isinstance(self.target, Channel)
 
     def __str__(self):
-        return self.prefix + " " + " ".join(self.args)
+        return self.prefix + " :" + " ".join(self.args)
 
     def __len__(self):
         return len(self.s_msg)
