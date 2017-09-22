@@ -13,6 +13,10 @@ def hook(*name):
     return _decorate
 
 
+def raw(*name):
+    return hook(*(("raw_" + n) for n in name))
+
+
 class Hook:
     def __init__(self, plugin: str, func: Callable):
         self.plugin: str = plugin
