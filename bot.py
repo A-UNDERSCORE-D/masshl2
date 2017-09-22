@@ -22,6 +22,7 @@ class Bot:
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
         self.message_hooks: Dict[str, List[Callable]] = defaultdict(list)
+        self.hooks: Dict[str, Dict[str, List[Callable]]] = defaultdict(lambda: defaultdict(list))
         self.name = name
         self.log = Logger(self)
         self.storage = {}
@@ -77,24 +78,28 @@ class Bot:
         if not name.startswith("plugins."):
             name = "plugins." + name
         try:
-            if name in self.plugins:
-                self.unload(name)
             print("loading plugin", name)
             imported_module = importlib.import_module(name)
             if hasattr(imported_module, "_masshl_loaded"):
                 importlib.reload(imported_module)
+                if name in self.plugins:
+                    self.unload(name)
             else:
                 setattr(imported_module, "_masshl_loaded", None)
-
         except Exception as e:
             self.log.exception(e)
             return e
 
         else:
             setattr(imported_module, "_masshl_loaded", None)
-            self.plugins[name] = imported_module
-            self._load_msg_hooks(imported_module, name)
-            self._run_onload_hooks(imported_module, name)
+            resp = self._run_onload_hooks(imported_module, name)
+            if not isinstance(resp, Exception):
+                self.plugins[name] = imported_module
+                self._load_msg_hooks(imported_module, name)
+                self._load_hooks(imported_module, name)
+            else:
+                self.log.error(f"Plugin {name} failed to load.")
+                return resp
 
     def unload(self, name):
         if not name.startswith("plugins."):
@@ -112,13 +117,30 @@ class Bot:
                 delattr(func, "_isMessageCallback")
 
     def _run_onload_hooks(self, plugin, name):
+        ok = True
         for func in plugin.__dict__.values():
             if hasattr(func, "_isOnLoadCallback"):
                 data = {"name": name}
-                self.launch_hook(func, **data)
+                try:
+                    self.launch_hook_func(func, **data)
+                except Exception as e:
+                    ok = e
+                    self.log.exception(e)
                 delattr(func, "_isOnLoadCallback")
+        return ok
 
-    def launch_hook(self, func: Callable, **kwargs):
+    def _load_hooks(self, plugin, name):
+        self.log(f"Loading {name}'s 'new' hooks")
+        for func in plugin.__dict__.values():
+            if not hasattr(func, "_IsHook"):
+                continue
+            self.log(f"loading new hook {func}")
+            hooks = getattr(func, "_IsHook")
+            for hook in hooks:
+                self.hooks[hook][name].append(func)
+            delattr(func, "_IsHook")
+
+    def launch_hook_func(self, func: Callable, **kwargs):
         sig = inspect.signature(func)
         kwargs["bot"] = self
         args = []
@@ -127,3 +149,18 @@ class Bot:
                 f"Callback requested an argument that the hook launcher was not passed. it was '{arg}'"
             args.append(kwargs[arg])
         return func(*args)
+
+    def call_hook(self, name, **kwargs):
+        todos = []
+        if name not in self.hooks:
+            return
+        for plugin in self.hooks[name]:
+            for func in self.hooks[name][plugin]:
+                try:
+                    resp = self.launch_hook_func(func, **kwargs)
+                except Exception as e:
+                    todos.append((plugin, e, func))
+                else:
+                    todos.append((plugin, resp, None))
+        return todos
+

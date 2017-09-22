@@ -4,7 +4,10 @@ from sys import exc_info
 import parser
 from channel import Channel
 from logger import *
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from connection import Connection
+    from parser import Message
 # TODO: CTCP responses
 
 HANDLERS = {}
@@ -33,7 +36,7 @@ def handler(connection, prefix, tags, command, args):
         "args": args,
     }
     for func in HANDLERS.get(command, []):
-        connection.bot.launch_hook(func, **data)
+        connection.bot.launch_hook_func(func, **data)
 
 
 def identify(connection):
@@ -241,12 +244,13 @@ def onnotice(connection, args, prefix):
     on_msg(msg, connection)
 
 
-def on_msg(msg, conn):
+def on_msg(msg: 'Message', conn: 'Connection'):
     todos = []
+    new_todos = []
     for plugin in msg.conn.bot.message_hooks:
         for func in msg.conn.bot.message_hooks[plugin]:
             try:
-                todo = conn.bot.launch_hook(func, msg=msg)
+                todo = conn.bot.launch_hook_func(func, msg=msg)
             except Exception as e:
                 conn.log.exception(e)
                 ex_type, ex_info, ex_trace = exc_info()
@@ -256,7 +260,24 @@ def on_msg(msg, conn):
             else:
                 if todo:
                     todos.append(todo)
+
+    print("CALLING NEW HOOK")
+    temp = conn.bot.call_hook("message", msg=msg)
+    new_todos.extend(temp or [])
+    for plugin, resp, func in new_todos:
+        if isinstance(resp, Exception):
+            conn.log_adminchan(f"{func.__name__} in {func.__module__} just broke. Who wrote it? I want their head. "
+                               f"Exception: {type(resp).__name__}: {str(resp)}. see stdout for trace")
+        elif callable(resp):
+            respmsg = resp()
+            if respmsg:
+                msg.target.send_message(str(respmsg))
+        elif resp:
+            print(plugin, resp)
+            msg.target.send_message(str(resp))
+
     for todo in todos:
+        print(todo)
         if callable(todo):
             resp = todo()
             if resp:

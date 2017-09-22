@@ -1,4 +1,5 @@
 from handler import hook_message
+from hook import hook
 from typing import TYPE_CHECKING, Dict, Callable, NamedTuple
 
 import permissions
@@ -23,7 +24,7 @@ def command(*cmds, perm=None):
     return _decorate
 
 
-@hook_message
+@hook("message")
 def on_msg(msg: 'Message'):
     args = []
     if msg.message.startswith(msg.conn.cmdprefix):
@@ -50,7 +51,7 @@ def on_msg(msg: 'Message'):
             "conn": msg.conn,
             "bot": msg.bot
         }
-        return msg.bot.launch_hook(func, **data)
+        return msg.bot.launch_hook_func(func, **data)
 
 
 @command("msgme")
@@ -133,9 +134,15 @@ def cmd_part(args, conn):
     conn.part(chans, reason)
 
 
-@command("eval", perm=["bot_control"])
+@command("eval")
 def command_eval(bot, conn):
-    return "Perms Checked"
+    print(bot.hooks)
+    return str(bot.hooks)
+
+
+@hook("Message")
+def test_hook_01(msg, bot):
+    print(msg, bot.ThisIntentionallyBreaks)
 
 
 @command("config", perm=["bot_control"])
