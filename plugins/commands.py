@@ -25,6 +25,8 @@ def command(*cmds, perm=None):
 
 @hook("message")
 def on_msg(msg: 'Message'):
+    if not msg.target:
+        return
     args = []
     if msg.message.startswith(msg.conn.cmdprefix):
         cmd = msg.s_msg[0][1:]
@@ -72,6 +74,8 @@ def reload(msg: 'Message', args):
             resp = msg.bot.load_plugin(plugin_name)
             if resp:
                 msg.target.send_message(f"{plugin_name} failed to load. Error: '{resp}'")
+                if isinstance(resp, Exception):
+                    msg.conn.log.exception(resp)
             else:
                 msg.target.send_message(f"Reloaded '{plugin_name}' successfully")
 
@@ -139,9 +143,9 @@ def command_eval(bot, conn):
     return str(bot.hooks)
 
 
-@hook("Message")
-def test_hook_01(msg, bot):
-    print(msg, bot)
+# @hook("Message")
+# def test_hook_01(msg, bot):
+#     print(msg, bot)
 
 
 @command("config", perm=["bot_control"])
@@ -166,10 +170,12 @@ def cmd_config(bot, msg):
     elif subcommand == "update":
         bot.config.update_f_m()
 
+from pprint import pprint
+
 
 @command("dump_config")
 def cmd_dumpcfg(bot):
-    print(bot.config)
+    pprint(bot.hooks)
     return "dumped to stdout."
 
 
