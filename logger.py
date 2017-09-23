@@ -11,6 +11,7 @@ class Logger:
         self._ircin_logger = logging.getLogger("ircin")
         self._ircout_logger = logging.getLogger("ircout")
         self._def_logger = logging.getLogger("default")
+        self._e_logger = logging.getLogger("error")
         self.conn = conn.name
 
     def ircin(self, message):
@@ -26,10 +27,10 @@ class Logger:
         self._def_logger.debug(self.format(message))
 
     def error(self, message):
-        self._def_logger.error(self.format(message))
+        self._e_logger.error(self.format(message))
 
     def exception(self, exception):
-        self._def_logger.exception(exception)
+        self._e_logger.exception(exception)
 
     def format(self, message):
         return f"[{self.conn:^10}] {message}"
@@ -40,57 +41,67 @@ class Logger:
 
 def setup():
     config = {
-        "version": 1,
+        "version":    1,
         "formatters": {
-            "ircin": {
-                "format": "{asctime} [IRCIN ] {message}",
-                "style": "{",
+            "ircin":   {
+                "format":  "{asctime} [IRCIN ] {message}",
+                "style":   "{",
                 "datefmt": "%H:%M:%S"
             },
-            "ircout": {
-                "format": "{asctime} [IRCOUT] {message}",
-                "style": "{",
+            "ircout":  {
+                "format":  "{asctime} [IRCOUT] {message}",
+                "style":   "{",
                 "datefmt": "%H:%M:%S"
             },
             "default": {
-                "format": "{asctime} [{levelname:<6}] {message}",
-                "style": "{",
+                "format":  "{asctime} [{levelname:<6}] {message}",
+                "style":   "{",
                 "datefmt": "%H:%M:%S"
             }
         },
 
-        "handlers": {
-            "ircin": {
-                "class": "logging.StreamHandler",
+        "handlers":   {
+            "ircin":   {
+                "class":     "logging.StreamHandler",
                 "formatter": "ircin",
-                "level": "INFO",
-                "stream": "ext://sys.stdout",
+                "level":     "INFO",
+                "stream":    "ext://sys.stdout",
             },
-            "ircout": {
-                "class": "logging.StreamHandler",
+            "ircout":  {
+                "class":     "logging.StreamHandler",
                 "formatter": "ircout",
-                "level": "INFO",
-                "stream": "ext://sys.stdout",
+                "level":     "INFO",
+                "stream":    "ext://sys.stdout",
             },
             "default": {
-                "class": "logging.StreamHandler",
+                "class":     "logging.StreamHandler",
                 "formatter": "default",
-                "level": "DEBUG",
-                "stream": "ext://sys.stdout",
+                "level":     "DEBUG",
+                "stream":    "ext://sys.stdout",
             },
+            "error":   {
+                "class":     "logging.StreamHandler",
+                "formatter": "default",
+                "level":     "DEBUG",
+                "stream":    "ext://sys.stderr"
+            }
         },
-        "loggers": {
-            "ircin": {
-                "level": "INFO",
+        "loggers":    {
+            "ircin":   {
+                "level":    "INFO",
                 "handlers": ["ircin"]
             },
-            "ircout": {
-                "level": "INFO",
+            "ircout":  {
+                "level":    "INFO",
                 "handlers": ["ircout"]
             },
             "default": {
-                "level": "DEBUG",
+                "level":    "DEBUG",
                 "handlers": ["default"]
+            },
+            "error":   {
+                "level":    "DEBUG",
+                "handlers": ["error"]
             }
         }
     }
