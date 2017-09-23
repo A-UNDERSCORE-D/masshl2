@@ -12,6 +12,7 @@ from connection import Connection
 from logger import Logger
 from hook import Hook
 
+
 class Bot:
     def __init__(self, name="masshl"):
         self.connections = []
@@ -21,7 +22,6 @@ class Bot:
         self.is_restarting = False
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
-        self.message_hooks: Dict[str, List[Callable]] = defaultdict(list)
         self.hooks: Dict[str, List[Hook]] = defaultdict(list)
         self.name = name
         self.log = Logger(self)
@@ -73,17 +73,29 @@ class Bot:
         path = pathlib.Path("plugins").resolve().relative_to(self.cwd)
         for file in path.glob("*.py"):
             self.load_plugin('.'.join(file.parts).rsplit('.', 1)[0])
-        print(self.message_hooks)
 
     def load_plugin(self, name):
+        if name == "*":
+            resp = self.load_plugin(list(self.plugins.keys()))
+            for r in resp:
+                print(r)
+            return
+        if isinstance(name, list):
+            resp = []
+            for plugin in name:
+                print(self.load_plugin(plugin))
+            return resp
+        print(f"LOADING {name}")
         if not name.startswith("plugins."):
             name = "plugins." + name
         try:
             print("loading plugin", name)
             imported_module = importlib.import_module(name)
             if hasattr(imported_module, "_masshl_loaded"):
+                print(f"CALLING RELOAD FOR {name}")
                 importlib.reload(imported_module)
                 if name in self.plugins:
+                    print(f"CALLING UNLOAD FOR {name}")
                     self.unload(name)
             else:
                 setattr(imported_module, "_masshl_loaded", None)
@@ -93,47 +105,40 @@ class Bot:
 
         else:
             setattr(imported_module, "_masshl_loaded", None)
-            resp = self._run_onload_hooks(imported_module, name)
-            if not isinstance(resp, Exception):
-                self.plugins[name] = imported_module
-                self._load_msg_hooks(imported_module, name)
-                self._load_hooks(imported_module, name)
-            else:
+            responses = self.call_hook(f"on_load_{name}")
+            ok = True
+            for resp in responses:
+                if isinstance(resp, Exception):
+                    ok = False
+            if not ok:
                 self.log.error(f"Plugin {name} failed to load.")
-                return resp
+                return
+
+            self.plugins[name] = imported_module
+            self._load_hooks(imported_module, name)
 
     def unload(self, name):
         if not name.startswith("plugins."):
             name = "plugins." + name
         if name in self.plugins:
             del self.plugins[name]
-        if name in self.message_hooks:
-            del self.message_hooks[name]
-        for hooktype in self.hooks.values():
-            for hook in reversed(hooktype):
+            self.log.debug(f"REMOVING PLUGIN: {name}")
+        todo = []
+        for hook_name, hook_list in self.hooks.items():
+            for hook in reversed(hook_list):
                 if hook.plugin == name:
-                    print(f"REMOVING HOOK: {hook}")
-                hooktype.remove(hook)
+                    if hook_name == f"on_unload_{name}":
+                        todo.extend(self.call_hook(f"on_unload_{name}"))
+                    self.log.debug(f"REMOVING HOOK: {hook_name}: {hook}")
+                    hook_list.remove(hook)
+        self._cleanup_hooks()
+        self.handle_todos(todo)
 
-    def _load_msg_hooks(self, plugin, name):
-        for func in plugin.__dict__.values():
-            if hasattr(func, "_isMessageCallback"):
-                print(func.__module__, func)
-                self.message_hooks[name].append(func)
-                delattr(func, "_isMessageCallback")
-
-    def _run_onload_hooks(self, plugin, name):
-        ok = True
-        for func in plugin.__dict__.values():
-            if hasattr(func, "_isOnLoadCallback"):
-                data = {"name": name}
-                try:
-                    self.launch_hook_func(func, **data)
-                except Exception as e:
-                    ok = e
-                    self.log.exception(e)
-                delattr(func, "_isOnLoadCallback")
-        return ok
+    def _cleanup_hooks(self):
+        new_hooks = {n: h for n, h in self.hooks.items() if h}
+        self.hooks.clear()
+        self.hooks.update(new_hooks)
+        print(self.hooks)
 
     def _load_hooks(self, plugin, name):
         self.log(f"Loading {name}'s 'new' hooks")
@@ -148,7 +153,6 @@ class Bot:
 
     def launch_hook_func(self, func: Callable, **kwargs):
         sig = inspect.signature(func)
-        print(f"CALLING {func}")
         kwargs["bot"] = self
         args = []
         for arg in sig.parameters:
@@ -167,7 +171,16 @@ class Bot:
                 resp = self.launch_hook_func(hook.func, **kwargs)
             except Exception as e:
                 todos.append((hook, e))
+                self.log(f"Exception in {name}: {hook}")
+                self.log.exception(e)
             else:
                 todos.append((hook, resp))
         return todos
 
+    def handle_todos(self, todos):
+        print(f"HANDING: {todos}")
+        for hook, todo in todos:
+            if callable(todo):
+                todo()
+            else:
+                self.log(f"{hook}: {todo}")
