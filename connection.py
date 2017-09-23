@@ -138,9 +138,11 @@ class Connection:
             }
             responses = self.bot.call_hook("raw", **data)
             responses.extend(self.bot.call_hook("raw_" + cmd, **data))
-            for hook, resp in responses:
-                if isinstance(responses, Exception):
+            for _, resp in responses:
+                if isinstance(resp, Exception):
                     self.log.exception(resp)
+                elif resp:
+                    self.log(resp)
 
     def join(self, channels):
         chanstojoin: str = ""
