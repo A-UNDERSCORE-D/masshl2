@@ -3,25 +3,20 @@ from user import User
 
 
 class Channel:
-    def __init__(self, name: str, connection, count: int = 10,
-                 action: list = None, warn: int = 7, opchan: str = "",
-                 watched: bool = False):
+    def __init__(self, name: str, connection):
 
         self.name = name if name[0] != ":" else name[1:]
         self.modes = ""
-        self.count = count
-        self.action = action if action else ["MODE {chan} +b {mask}",
-                                             "KICK {chan} {nick}"]
-        self.warn = warn
-        self.opchan = opchan
         self.memberships = {}
-        self.watched = watched
         self.hasmodes = None
         self.receivingnames = False
         self.admins = []
         self.connection = connection
+        self.bot = self.connection.bot
 
         self.storage = {}
+        print(f"CHANNEL_INIT {self}")
+        self.bot.call_hook("channel_init", chan=self, conn=self.connection)
 
     def __eq__(self, other: str) -> bool:
         return self.name.lower() == other.lower()
