@@ -1,12 +1,10 @@
-from hook import raw
+from hook import raw, unload
 import base64
 import parser
 from logger import logall, logchan
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from channel import Channel
-    from connection import Connection
-    from parser import Message
+from connection import Connection
+from parser import Message
+from channel import Channel
 
 
 def identify(connection):
@@ -17,7 +15,6 @@ def identify(connection):
 
 @raw("PING")
 def onping(connection, args):
-    print("PING CALLED")
     connection.write("PONG :" + " ".join(args))
 
 
@@ -184,6 +181,7 @@ def onnamesend(connection, args):
 
 @raw("JOIN")
 def onjoin(connection, prefix, args):
+    print("ONJOIN CALLED")
     name = args[0]
     chan = connection.channels.get(args[0])
     nick = prefix.split("!")[0]
@@ -196,11 +194,6 @@ def onjoin(connection, prefix, args):
     if nick not in chan.memberships:
         chan.adduser(connection, user)
     logall(connection)
-
-
-def hook_message(func):
-    setattr(func, "_isMessageCallback", None)
-    return func
 
 
 @raw("PRIVMSG")
@@ -218,19 +211,6 @@ def onnotice(connection, args, prefix):
 def on_msg(msg: 'Message', conn: 'Connection'):
     todos = []
     new_todos = []
-    for plugin in msg.conn.bot.message_hooks:
-        for func in msg.conn.bot.message_hooks[plugin]:
-            try:
-                todo = conn.bot.launch_hook_func(func, msg=msg)
-            except Exception as e:
-                conn.log.exception(e)
-                msg.target.send_message(f"{func.__name__} in {func.__module__} just broke. Who wrote it? "
-                                        f"I want their head. Exception: {type(e).__name__}: {str(e)}. "
-                                        f"see stdout for trace")
-            else:
-                if todo:
-                    todos.append(todo)
-
     temp = conn.bot.call_hook("message", msg=msg)
     new_todos.extend(temp or [])
     for hook, resp in new_todos:
@@ -374,3 +354,16 @@ def onquit(connection, prefix):
         return
 
     connection.del_user(user)
+
+
+@unload(__name__)
+def onunload(bot):
+    plugins = list(bot.plugins.keys())
+    if __name__ in plugins:
+        plugins.remove(__name__)
+
+    def todo():
+        bot.log("Reloading all plugins.")
+        bot.load_plugin(plugins)
+
+    return todo
