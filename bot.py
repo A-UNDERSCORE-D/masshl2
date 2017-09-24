@@ -11,6 +11,7 @@ from config import Config
 from connection import Connection
 from logger import Logger
 from hook import Hook
+from permissions import check
 
 
 class Bot:
@@ -146,9 +147,9 @@ class Bot:
             if not hasattr(func, "_IsHook"):
                 continue
             hooks = getattr(func, "_IsHook")
-            for hook in hooks:
-                self.log(f"loading new hook {hook}: {func}")
-                self.hooks[hook].append(Hook(name, func))
+            for hook, perm in hooks:
+                self.log(f"loading new hook {hook}: {func}" + (f" Hook requested {perm}" if perm else ""))
+                self.hooks[hook].append(Hook(name, func, perm))
             delattr(func, "_IsHook")
 
     def launch_hook_func(self, func: Callable, **kwargs):
@@ -167,6 +168,10 @@ class Bot:
         if name not in self.hooks:
             return todos
         for hook in self.hooks[name]:
+            if hook.perms and not check(kwargs["msg"], hook.perms):
+                kwargs["msg"].origin.send_notice("Sorry, you are not allowed to use this command")
+                continue
+
             try:
                 resp = self.launch_hook_func(hook.func, **kwargs)
             except Exception as e:
@@ -177,10 +182,14 @@ class Bot:
                 todos.append((hook, resp))
         return todos
 
-    def handle_todos(self, todos):
-        print(f"HANDING: {todos}")
+    def handle_todos(self, todos, ret=False):
+        self.log.debug(f"HANDLING TODOS: {todos}")
+        resp = []
         for hook, todo in todos:
             if callable(todo):
                 todo()
+            elif ret:
+                resp.append(todo)
             else:
                 self.log(f"{hook}: {todo}")
+        return resp
