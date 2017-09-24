@@ -38,6 +38,10 @@ def channel_init(func):
     return hook("channel_init", func=func)
 
 
+def command(*name, perm=None):
+    return hook(*(("cmd_" + n) for n in name), permissions=perm)
+
+
 class Hook:
     def __init__(self, plugin: str, func: Callable, req_perms: List =None):
         self.plugin: str = plugin
