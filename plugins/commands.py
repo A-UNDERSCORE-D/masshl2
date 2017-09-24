@@ -1,29 +1,11 @@
-from hook import hook
-from typing import TYPE_CHECKING, Dict, Callable, NamedTuple
+from hook import message, command
+from typing import TYPE_CHECKING
 
-import permissions
 if TYPE_CHECKING:
     from parser import Message
 
 
-class CommandHook(NamedTuple):
-    callback: Callable
-    perms: tuple = None
-
-
-COMMANDS: Dict[str, CommandHook] = {}
-
-
-def command(*cmds, perm=None):
-    def _decorate(func):
-        for cmd in cmds:
-            assert cmd not in COMMANDS
-            COMMANDS[cmd] = CommandHook(func, perms=tuple(perm or []))
-        return func
-    return _decorate
-
-
-@hook("message")
+@message
 def on_msg(msg: 'Message'):
     if not msg.target:
         return
@@ -33,26 +15,23 @@ def on_msg(msg: 'Message'):
         if len(msg) > 1:
             args = msg.s_msg[1:]
     elif msg.startswith(msg.conn.nick):
-        cmd = msg.s_msg[1]
-        if len(msg) > 2:
-            args = msg.s_msg[2:]
+        if len(msg) >= 2:
+            cmd = msg.s_msg[1]
+            if len(msg) > 2:
+                args = msg.s_msg[2:]
+        else:
+            return
     else:
         return
 
-    handler = COMMANDS.get(cmd)
-    if handler and callable(handler.callback):
-        if handler.perms and not permissions.check(msg, handler.perms):
-            msg.origin.send_notice("Sorry, you are not allowed to use this command")
-            return
-        func = handler.callback
-        data = {
-            "msg": msg,
-            "cmd": cmd,
-            "args": args,
-            "conn": msg.conn,
-            "bot": msg.bot
-        }
-        return msg.bot.launch_hook_func(func, **data)
+    data = {
+        "msg":  msg,
+        "cmd":  cmd,
+        "args": args,
+        "conn": msg.conn,
+        "bot":  msg.bot
+    }
+    return msg.bot.call_hook(f"cmd_{cmd}", **data)
 
 
 @command("msgme")
@@ -170,18 +149,21 @@ def cmd_config(bot, msg):
     elif subcommand == "update":
         bot.config.update_f_m()
 
-from pprint import pprint
-
 
 @command("dump_config")
 def cmd_dumpcfg(bot):
-    pprint(bot.hooks)
+    print(bot.hooks)
     return "dumped to stdout."
 
 
 @command("toggle_log", perm=["bot_control"])
 def cmd_logtoggle(conn):
     conn.print_raw = not conn.print_raw
+
+
+@command("test_perms", perm=["bot_control"])
+def cmd_test_perms(msg):
+    return "Passed"
 
 
 @command("restart", perm=["bot_control"])
