@@ -8,9 +8,7 @@ def hook(*name, func=None, permissions=None):
         except AttributeError:
             hook_list = []
             setattr(f, "_IsHook", hook_list)
-        print(name, func, permissions)
         hook_list.extend((_hook.lower(), permissions) for _hook in name)
-        print(hook_list)
         return f
     if func is not None:
         return _decorate(func)
@@ -26,12 +24,12 @@ def message(func):
     return hook("message", func=func)
 
 
-def load(name):
-    return hook(f"on_load_{name}")
+def load(func):
+    return hook(f"on_load_{str(func.__module__)}", func=func)
 
 
-def unload(name):
-    return hook(f"on_unload_{name}")
+def unload(func):
+    return hook(f"on_unload_{func.__module__}", func=func)
 
 
 def channel_init(func):
