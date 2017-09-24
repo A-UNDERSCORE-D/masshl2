@@ -4,9 +4,9 @@ from selectors import EVENT_READ
 from weakref import WeakValueDictionary
 
 import parser
-# from handler import handler
 from logger import Logger
-# from typing import TYPE_CHECKING
+from typing import DefaultDict, Dict
+from collections import defaultdict
 from user import User
 from channel import Channel
 
@@ -70,7 +70,7 @@ class Connection:
         self.server = ""
         self.maxJtargets = 0
 
-        self.storage = {}
+        self.storage: DefaultDict[str, Dict] = defaultdict(dict)
 
 # TODO: Support IRCv3.2 CAPS, CAP LS 302
     def connect(self):

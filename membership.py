@@ -1,5 +1,6 @@
 import weakref
-
+from typing import DefaultDict, Dict
+from collections import defaultdict
 
 class Membership:
     def __init__(self, channel, user, isop: bool = False, ishop: bool = False,
@@ -11,6 +12,7 @@ class Membership:
         self.channel = weakref.proxy(channel)
         self.user = user
         self.last_ping = 0
+        self.storage: DefaultDict[str, Dict] = defaultdict(dict)
 
     def prefix(self) -> str:
         if self.isadmin:

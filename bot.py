@@ -5,7 +5,7 @@ import time
 import gc
 from collections import defaultdict
 from selectors import DefaultSelector
-from typing import Dict, List, Callable
+from typing import Dict, DefaultDict, List, Callable
 
 from config import Config
 from connection import Connection
@@ -26,7 +26,7 @@ class Bot:
         self.hooks: Dict[str, List[Hook]] = defaultdict(list)
         self.name = name
         self.log = Logger(self)
-        self.storage = {}
+        self.storage: DefaultDict[str, Dict] = defaultdict(dict)
 
     def run(self):
         self._load_plugins()

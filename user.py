@@ -1,5 +1,6 @@
 import weakref
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Dict, DefaultDict
+from collections import defaultdict
 from weakref import WeakValueDictionary
 
 if TYPE_CHECKING:
@@ -13,7 +14,7 @@ class User:
         self.host = host
         self.memberships = WeakValueDictionary()
         self.connection = weakref.proxy(connection)
-        self.storage = {}
+        self.storage: DefaultDict[str, Dict] = defaultdict(dict)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, User):

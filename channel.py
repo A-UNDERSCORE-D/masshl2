@@ -1,5 +1,7 @@
 from membership import Membership
 from user import User
+from typing import Dict, DefaultDict
+from collections import defaultdict
 
 
 class Channel:
@@ -14,7 +16,7 @@ class Channel:
         self.connection = connection
         self.bot = self.connection.bot
 
-        self.storage = {}
+        self.storage: DefaultDict[str, Dict] = defaultdict(dict)
         print(f"CHANNEL_INIT {self}")
         self.bot.call_hook("channel_init", chan=self, conn=self.connection)
 
