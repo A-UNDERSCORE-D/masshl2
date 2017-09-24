@@ -5,7 +5,8 @@ import time
 import gc
 from collections import defaultdict
 from selectors import DefaultSelector
-from typing import Dict, DefaultDict, List, Callable
+from typing import Dict, DefaultDict, List, Callable, Union
+from fnmatch import fnmatch
 
 from config import Config
 from connection import Connection
@@ -75,7 +76,7 @@ class Bot:
         for file in path.glob("*.py"):
             self.load_plugin('.'.join(file.parts).rsplit('.', 1)[0])
 
-    def load_plugin(self, name):
+    def load_plugin(self, name: Union[List, str]):
         if name == "*":
             resp = self.load_plugin(list(self.plugins.keys()))
             for r in resp:
@@ -106,6 +107,7 @@ class Bot:
 
         else:
             setattr(imported_module, "_masshl_loaded", None)
+            self._load_hooks(imported_module, name, "on_load*")
             responses = self.call_hook(f"on_load_{name}")
             ok = True
             for resp in responses:
@@ -141,13 +143,17 @@ class Bot:
         self.hooks.update(new_hooks)
         print(self.hooks)
 
-    def _load_hooks(self, plugin, name):
-        self.log(f"Loading {name}'s 'new' hooks")
+    def _load_hooks(self, plugin, name, filters: str =None):
+        self.log.debug(f"Loading {name}'s hooks" + (f" Filtered to {filters}" if filters else ""))
         for func in plugin.__dict__.values():
+            # self.log.debug(f"checking {func} in {plugin}")
             if not hasattr(func, "_IsHook"):
                 continue
             hooks = getattr(func, "_IsHook")
             for hook, perm in hooks:
+                if filters is not None and not fnmatch(hook, filters):
+                    self.log.debug(f"SKIPPING {hook}: {func}, does not match filter ('{filters}'): '{hook}''")
+                    continue
                 self.log(f"loading new hook {hook}: {func}" + (f" Hook requested {perm}" if perm else ""))
                 self.hooks[hook].append(Hook(name, func, perm))
             delattr(func, "_IsHook")
