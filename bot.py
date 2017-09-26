@@ -152,13 +152,13 @@ class Bot:
             if not hasattr(func, "_IsHook"):
                 continue
             hooks = getattr(func, "_IsHook")
-            for hook, perm in hooks:
-                if filters is not None and not fnmatch(hook, filters):
-                    self.log.debug(f"SKIPPING {hook}: {func}, does not match filter ('{filters}'): '{hook}'")
+            for hook in hooks:
+                if filters is not None and not fnmatch(hook.hook_name, filters):
+                    self.log.debug(f"SKIPPING {hook}, does not match filter ('{filters}')")
                     continue
                 else:
-                    self.log(f"loading new hook {hook}: {func}" + (f" Hook requested {perm}" if perm else ""))
-                    self.hooks[hook].append(Hook(name, func, perm))
+                    self.log(f"loading new hook {hook}" + (f" Hook requested {hook.perms}" if hook.perms else ""))
+                    self.hooks[hook.hook_name].append(hook)
                     delattr(func, "_IsHook")
 
     def launch_hook_func(self, func: Callable, **kwargs):
