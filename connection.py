@@ -128,7 +128,7 @@ class Connection:
                     args[i] = " ".join(args[i:])[1:]
                     del args[i + 1:]
                 i += 1
-            # handler(self, prefix, tags, cmd, args)
+
             data = {
                 "connection": self,
                 "prefix": prefix,
