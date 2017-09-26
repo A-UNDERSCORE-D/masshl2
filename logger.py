@@ -26,6 +26,9 @@ class Logger:
     def debug(self, message):
         self._def_logger.debug(self.format(message))
 
+    def warn(self, message):
+        self._def_logger.warning(self.format(message))
+
     def error(self, message):
         self._e_logger.error(self.format(message))
 
@@ -44,17 +47,17 @@ def setup():
         "version":    1,
         "formatters": {
             "ircin":   {
-                "format":  "{asctime} [IRCIN ] {message}",
+                "format":  "{asctime} [IRCIN  ] {message}",
                 "style":   "{",
                 "datefmt": "%H:%M:%S"
             },
             "ircout":  {
-                "format":  "{asctime} [IRCOUT] {message}",
+                "format":  "{asctime} [IRCOUT ] {message}",
                 "style":   "{",
                 "datefmt": "%H:%M:%S"
             },
             "default": {
-                "format":  "{asctime} [{levelname:<6}] {message}",
+                "format":  "{asctime} [{levelname:<7}] {message}",
                 "style":   "{",
                 "datefmt": "%H:%M:%S"
             }
