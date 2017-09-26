@@ -348,7 +348,7 @@ def onquit(connection, prefix):
     connection.del_user(user)
 
 
-@unload(__name__)
+@unload
 def onunload(bot):
     plugins = list(bot.plugins.keys())
     if __name__ in plugins:
