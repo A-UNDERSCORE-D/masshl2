@@ -1,6 +1,7 @@
 from typing import Callable, List
 
 
+# TODO: Is there a reason this doesnt just load the Hook object onto the attribute?
 def hook(*name, func=None, permissions=None):
     def _decorate(f):
         try:
@@ -14,6 +15,20 @@ def hook(*name, func=None, permissions=None):
         return _decorate(func)
     else:
         return _decorate
+
+
+class Hook:
+    def __init__(self, plugin: str, func: Callable, req_perms: List = None, data = None):
+        self.plugin = plugin
+        self.func = func
+        self.perms: List = req_perms if req_perms is not None else []
+        self.data = data
+
+    def __str__(self):
+        return f"{self.plugin}: {self.func}"
+
+
+# Below are for ease of use
 
 
 def raw(*name):
@@ -40,11 +55,14 @@ def command(*name, perm=None):
     return hook(*(("cmd_" + n) for n in name), permissions=perm)
 
 
-class Hook:
-    def __init__(self, plugin: str, func: Callable, req_perms: List =None):
-        self.plugin: str = plugin
-        self.func: Callable = func
-        self.perms: List = req_perms if req_perms is not None else []
+def connect_finish(func):
+    return hook("connect_finish", func=func)
 
-    def __str__(self):
-        return f"{self.plugin}: {self.func}"
+
+def tick(func):
+    return hook("tick", func=func)
+
+
+# Timer isnt guaranteed to happen at the time, but will always happen after
+def timer(time):
+    return hook("timer")
