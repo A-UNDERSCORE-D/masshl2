@@ -17,7 +17,7 @@ from permissions import check
 
 class Bot:
     def __init__(self, name="masshl"):
-        self.connections = []
+        self.connections: List[Connection] = []
         self.selector = DefaultSelector()
         self.config = Config()
         self.running = False
@@ -28,6 +28,7 @@ class Bot:
         self.name = name
         self.log = Logger(self)
         self.storage: DefaultDict[str, Dict] = defaultdict(dict)
+        self.start_time = time.time()
 
     def run(self):
         self._load_plugins()
@@ -49,6 +50,7 @@ class Bot:
             event = self.selector.select(1)
             for file, _ in event:
                 file.fileobj.read()
+            self.call_hook("tick")
         self.selector.close()
         return self.is_restarting
 
@@ -144,7 +146,7 @@ class Bot:
         print(self.hooks)
 
     def _load_hooks(self, plugin, name, filters: str =None):
-        self.log.debug(f"Loading {name}'s hooks" + (f" Filtered to {filters}" if filters else ""))
+        self.log.debug(f"Loading {name}'s hooks." + (f" Filtered to {filters}" if filters else ""))
         for func in plugin.__dict__.values():
             # self.log.debug(f"checking {func} in {plugin}")
             if not hasattr(func, "_IsHook"):
@@ -152,11 +154,12 @@ class Bot:
             hooks = getattr(func, "_IsHook")
             for hook, perm in hooks:
                 if filters is not None and not fnmatch(hook, filters):
-                    self.log.debug(f"SKIPPING {hook}: {func}, does not match filter ('{filters}'): '{hook}''")
+                    self.log.debug(f"SKIPPING {hook}: {func}, does not match filter ('{filters}'): '{hook}'")
                     continue
-                self.log(f"loading new hook {hook}: {func}" + (f" Hook requested {perm}" if perm else ""))
-                self.hooks[hook].append(Hook(name, func, perm))
-            delattr(func, "_IsHook")
+                else:
+                    self.log(f"loading new hook {hook}: {func}" + (f" Hook requested {perm}" if perm else ""))
+                    self.hooks[hook].append(Hook(name, func, perm))
+                    delattr(func, "_IsHook")
 
     def launch_hook_func(self, func: Callable, **kwargs):
         sig = inspect.signature(func)
@@ -199,3 +202,8 @@ class Bot:
             else:
                 self.log(f"{hook}: {todo}")
         return resp
+
+    def log_everywhere(self, msg):
+        self.log(msg)
+        for conn in self.connections:
+            conn.log_adminchan(msg)
