@@ -36,7 +36,7 @@ class Logger:
         self._e_logger.exception(exception)
 
     def format(self, message):
-        return f"[{self.conn:^10}] {message}"
+        return f"[{self.conn:<10}] {message}"
 
     def __call__(self, msg):
         self.info(msg)
