@@ -157,13 +157,14 @@ class Bot:
                     self.log.debug(f"SKIPPING {hook}, does not match filter ('{filters}')")
                     continue
                 else:
-                    self.log(f"loading new hook {hook}" + (f" Hook requested {hook.perms}" if hook.perms else ""))
+                    self.log.debug(f"loading new hook {hook}" + (f" Hook requested {hook.perms}" if hook.perms else ""))
                     self.hooks[hook.hook_name].append(hook)
                     delattr(func, "_IsHook")
 
     def launch_hook_func(self, func: Callable, **kwargs):
         sig = inspect.signature(func)
         kwargs["bot"] = self
+        kwargs["start_time"] = self.start_time
         args = []
         for arg in sig.parameters:
             assert arg in kwargs, \
@@ -180,13 +181,13 @@ class Bot:
             if hook.perms and not check(kwargs["msg"], hook.perms):
                 kwargs["msg"].origin.send_notice("Sorry, you are not allowed to use this command")
                 continue
-
             try:
                 resp = self.launch_hook_func(hook.func, **kwargs)
             except Exception as e:
                 todos.append((hook, e))
                 self.log(f"Exception in {name}: {hook}")
                 self.log.exception(e)
+                self.log_adminchans(f"Exception in {hook}: {type(e).__name__}: {str(e)}")
             else:
                 todos.append((hook, resp))
         return todos
@@ -195,6 +196,8 @@ class Bot:
         self.log.debug(f"HANDLING TODOS: {todos}")
         resp = []
         for hook, todo in todos:
+            if isinstance(todo, list):
+                resp.extend(self.handle_todos(todo, True))
             if callable(todo):
                 todo()
             elif ret:
@@ -205,5 +208,8 @@ class Bot:
 
     def log_everywhere(self, msg):
         self.log(msg)
+        self.log_adminchans(msg)
+
+    def log_adminchans(self, msg):
         for conn in self.connections:
             conn.log_adminchan(msg)
