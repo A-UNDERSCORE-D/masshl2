@@ -211,21 +211,30 @@ def onnotice(connection, args, prefix):
 def on_msg(msg: 'Message', conn: 'Connection'):
     todos = []
     todos.extend(conn.bot.call_hook("message", msg=msg) or [])
-    for hook, resp in todos:
-        if isinstance(resp, Exception):
-            conn.log_adminchan(f"{hook.func.__name__} in {hook.func.__module__} just broke. Who wrote it? "
-                               f"I want their head. Exception: {type(resp).__name__}: {str(resp)}. "
-                               f"see stdout for trace")
-        elif callable(resp):
-            respmsg = resp()
-            if respmsg:
-                msg.target.send_message(str(respmsg))
-        elif isinstance(resp, list):
-            for response in conn.bot.handle_todos(resp, ret=True):
-                msg.target.send_message(str(response))
-        elif resp:
-            print(hook, resp)
-            msg.target.send_message(str(resp))
+
+    def _handle_todos(tds):
+        for hook, resp in tds:
+            # This is a nested call, deal with it via recursion.
+            if isinstance(resp, list):
+                _handle_todos(resp)
+                continue
+
+            if isinstance(resp, Exception):
+                conn.log_adminchan(f"{hook.func.__name__} in {hook.func.__module__} just broke. Who wrote it? "
+                                   f"I want their head. Exception: {type(resp).__name__}: {str(resp)}. "
+                                   f"see stdout for trace")
+            elif callable(resp):
+                respmsg = resp()
+                if respmsg:
+                    msg.target.send_message(str(respmsg))
+            elif isinstance(resp, list):
+                for response in conn.bot.handle_todos(resp, ret=True):
+                    msg.target.send_message(str(response))
+            elif resp:
+                print(hook, resp)
+                msg.target.send_message(str(resp))
+
+    _handle_todos(todos)
 
 
 @raw("MODE")
