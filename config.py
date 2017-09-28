@@ -18,9 +18,6 @@ DEFAULT_CONFIG = {
             "cmdprefix":         "~",
             "channels":          "",
             "adminchan":         "#HeJustKeptTalkingInOneLongIncrediblyUnbrokenSentence",
-            "global_nickignore": [l for l in string.ascii_lowercase],
-            "bot_nicks":         [],
-            "global_maskignore": "",
             # debug or similar configs
             "print_raw":         True
         },
@@ -53,7 +50,7 @@ class Config(dict):
 
     def save(self, name=None):
         if not name:
-            name = self.name
+            name = self.name + ".json"
         with open(name, "w") as f:
             json.dump(self, f, indent=2)
 
