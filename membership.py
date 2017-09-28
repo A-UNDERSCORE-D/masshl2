@@ -2,6 +2,7 @@ import weakref
 from typing import DefaultDict, Dict
 from collections import defaultdict
 
+
 class Membership:
     def __init__(self, channel, user, isop: bool = False, ishop: bool = False,
                  isvoice: bool = False, isadmin: bool = False):

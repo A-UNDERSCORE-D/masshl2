@@ -30,7 +30,7 @@ class Bot:
         self.storage: DefaultDict[str, Dict] = defaultdict(dict)
         self.start_time = time.time()
 
-    def run(self):
+    def run(self) -> bool:
         self._load_plugins()
         self.log.debug(self.hooks)
         for network in self.config["connections"]:
@@ -172,7 +172,7 @@ class Bot:
             args.append(kwargs[arg])
         return func(*args)
 
-    def call_hook(self, name, handle_errors=True, **kwargs):
+    def call_hook(self, name, handle_errors=True, **kwargs) -> list:
         todos = []
         name = name.lower()
         if name not in self.hooks:
@@ -193,7 +193,7 @@ class Bot:
                 todos.append((hook, resp))
         return todos
 
-    def handle_todos(self, todos, ret=False):
+    def handle_todos(self, todos, ret=False) -> list:
         resp = []
         for hook, todo in todos:
             if isinstance(todo, list):

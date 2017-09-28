@@ -2,7 +2,7 @@ from fnmatch import fnmatch
 from channel import Channel
 
 
-def check(msg, perms):
+def check(msg, perms) -> bool:
     # check global admins first, then channel. then do special cases for "is_op"/hop etc
     mask = msg.origin.mask
     msg.conn.log(mask)

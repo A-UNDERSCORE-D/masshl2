@@ -1,38 +1,42 @@
 import socket
 import ssl
+from collections import defaultdict
 from selectors import EVENT_READ
+from typing import DefaultDict, Dict, TYPE_CHECKING
 from weakref import WeakValueDictionary
 
 import parser
-from logger import Logger
-from typing import DefaultDict, Dict
-from collections import defaultdict
-from user import User
 from channel import Channel
+from logger import Logger
+from user import User
+
+if TYPE_CHECKING:
+    from typing import List, Union
+    from bot import Bot
 
 
 class Connection:
     def __init__(self, config: dict, selector, bot, name, debug):
-        self.port = config["port"]
-        self.host = config["network"]
-        self.is_ssl = config["SSL"]
-        self.debug = debug
-        self.joinchannels = config["channels"]
-        self.nick = config["nick"]
-        self.user = config["user"]
-        self.gecos = config["gecos"]
-        self.nsuser = config["nsident"]
-        self.nspass = config["nspass"]
-        self.commands = config["commands"]
-        self._adminchan = config["adminchan"]
-        self.admins = config["admins"]
-        self.cmdprefix = config["cmdprefix"]
-        self.global_nickignore = config["global_nickignore"]
-        self.global_maskignore = config["global_maskignore"]
-        self.bot_nicks = config["bot_nicks"]
-        self.print_raw = config["print_raw"]
-        self.bot = bot
-        self.name = name
+        self.port: str = config["port"]
+        self.host: str = config["network"]
+        self.is_ssl: bool = config["SSL"]
+        self.debug: bool = debug
+        self.joinchannels: list = config["channels"]
+        self.nick: str = config["nick"]
+        self.user: str = config["user"]
+        self.gecos: str = config["gecos"]
+        self.nsuser: str = config["nsident"]
+        self.nspass: str = config["nspass"]
+        self.commands: List[str] = config["commands"]
+        self._adminchan: str = config["adminchan"]
+        self.admins: List[str] = config["admins"]
+        self.cmdprefix: str = config["cmdprefix"]
+        self.global_nickignore: List[str] = config["global_nickignore"]
+        self.global_maskignore: List[str] = config["global_maskignore"]
+        self.bot_nicks: List[str] = config["bot_nicks"]
+        self.print_raw: bool = config["print_raw"]
+        self.bot: 'Bot' = bot
+        self.name: str = name
 
         self.selector = selector
         self.caps = {"userhost-in-names", "sasl"}
@@ -72,7 +76,7 @@ class Connection:
 
         self.storage: DefaultDict[str, Dict] = defaultdict(dict)
 
-# TODO: Support IRCv3.2 CAPS, CAP LS 302
+    # TODO: Support IRCv3.2 CAPS, CAP LS 302
     def connect(self):
         if self.is_ssl:
             self.socket = ssl.wrap_socket(self.socket)
@@ -131,10 +135,10 @@ class Connection:
 
             data = {
                 "connection": self,
-                "prefix": prefix,
-                "tags": tags,
-                "cmd": cmd,
-                "args": args
+                "prefix":     prefix,
+                "tags":       tags,
+                "cmd":        cmd,
+                "args":       args
             }
             responses = self.bot.call_hook("raw", **data)
             responses.extend(self.bot.call_hook("raw_" + cmd, **data))
@@ -175,7 +179,7 @@ class Connection:
         self.socket.close()
         self.connected = False
 
-    def fileno(self):
+    def fileno(self) -> int:
         if self.socket:
             return self.socket.fileno()
         else:
@@ -202,9 +206,9 @@ class Connection:
             chan.deluser(user)
 
     @property
-    def adminchan(self) -> 'Channel':
+    def adminchan(self) -> 'Union[Channel, str]':
         """Plugins should not store a reference to this"""
-        return self.channels.get(self._adminchan, None) or self._adminchan
+        return self.channels.get(self._adminchan, self._adminchan)
 
     def log_adminchan(self, msg: str):
         if isinstance(self.adminchan, Channel):

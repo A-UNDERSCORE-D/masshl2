@@ -5,6 +5,7 @@ from channel import Channel
 if typing.TYPE_CHECKING:
     from user import User
     from connection import Connection
+    from bot import Bot
 
 PREFIX_RE = re.compile(r'(?P<nick>.+?)(?:!(?P<user>.+?))?(?:@(?P<host>.+?))?')
 
@@ -28,7 +29,7 @@ class Message:
         self.eol_msg = [' '.join(args[i:]) for i in range(len(args))]
 
     @property
-    def bot(self):
+    def bot(self) -> 'Bot':
         return self.conn.bot
 
     def _parse_msg(self, prefix, args):
@@ -60,8 +61,8 @@ class Message:
     def __contains__(self, item):
         return item in self.s_msg or item in self.message
 
-    def startswith(self, other: str):
+    def startswith(self, other: str) -> bool:
         return self.message.startswith(other)
 
-    def lower(self):
+    def lower(self) -> str:
         return self.message.lower()
