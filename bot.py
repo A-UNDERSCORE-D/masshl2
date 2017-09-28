@@ -172,7 +172,7 @@ class Bot:
             args.append(kwargs[arg])
         return func(*args)
 
-    def call_hook(self, name, **kwargs):
+    def call_hook(self, name, handle_errors=True, **kwargs):
         todos = []
         name = name.lower()
         if name not in self.hooks:
@@ -185,15 +185,15 @@ class Bot:
                 resp = self.launch_hook_func(hook.func, **kwargs)
             except Exception as e:
                 todos.append((hook, e))
-                self.log(f"Exception in {name}: {hook}")
                 self.log.exception(e)
-                self.log_adminchans(f"Exception in {hook}: {type(e).__name__}: {str(e)}")
+                if handle_errors:
+                    self.log(f"Exception in {name}: {hook}")
+                    self.log_adminchans(f"Exception in {hook}: {type(e).__name__}: {str(e)}")
             else:
                 todos.append((hook, resp))
         return todos
 
     def handle_todos(self, todos, ret=False):
-        self.log.debug(f"HANDLING TODOS: {todos}")
         resp = []
         for hook, todo in todos:
             if isinstance(todo, list):
@@ -202,7 +202,7 @@ class Bot:
                 todo()
             elif ret:
                 resp.append(todo)
-            else:
+            elif todo:
                 self.log(f"{hook}: {todo}")
         return resp
 
@@ -213,3 +213,7 @@ class Bot:
     def log_adminchans(self, msg):
         for conn in self.connections:
             conn.log_adminchan(msg)
+
+    @property
+    def plugin_data(self):
+        return self.config["plugin_data"]
