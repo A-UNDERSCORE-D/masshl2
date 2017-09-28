@@ -1,5 +1,7 @@
-from hook import message, command
+from pprint import pprint
 from typing import TYPE_CHECKING
+
+from hook import message, command
 
 if TYPE_CHECKING:
     from parser import Message
@@ -68,6 +70,7 @@ def cmd_unload(args, bot):
             for arg in args:
                 bot.unload(arg)
             return f"{' '.join(args)} unloaded"
+
         return todo
     else:
         return "This command requires an argument"
@@ -122,11 +125,6 @@ def command_eval(bot, conn):
     return str(bot.hooks)
 
 
-# @hook("Message")
-# def test_hook_01(msg, bot):
-#     print(msg, bot)
-
-
 @command("config", perm=["bot_control"])
 def cmd_config(bot, msg):
     if len(msg) < 1:
@@ -152,7 +150,8 @@ def cmd_config(bot, msg):
 
 @command("dump_config")
 def cmd_dumpcfg(bot):
-    print(bot.hooks)
+    pprint(bot.config)
+    pprint(bot.hooks)
     return "dumped to stdout."
 
 
