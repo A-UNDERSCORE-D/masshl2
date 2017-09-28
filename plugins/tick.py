@@ -1,4 +1,4 @@
-from hook import tick, load, hook
+from hook import tick, load, hook, timer
 import time
 
 last = 0
@@ -20,11 +20,7 @@ def watchdog(bot):
 
 @tick
 def run_timer_hooks(bot):
-    now = time.time()
-    nowint = int(now)
-    if int(now) % 5 == 0:
-        bot.call_hook("timer_5s", now=now)
-    if nowint % 30 == 0:
-        bot.call_hook("timer_30s", now=now)
-    if nowint % 60 == 0:
-        bot.call_hook("timer_60s", now=now)
+    now = int(time.time())
+    for h in bot.hooks.keys():
+        if h.startswith("timer_") and now % int(h.split("_")[1]) == 0:
+            bot.handle_todos(bot.call_hook(h, now=now))
