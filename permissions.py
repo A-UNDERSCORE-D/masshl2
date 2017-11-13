@@ -8,7 +8,7 @@ def check(msg, perms) -> bool:
     msg.conn.log(mask)
     allowed = False
     for perm in perms:
-        assert perm in ("bot_control", "chan_admin")
+        assert perm in ("bot_control", "chan_admin"), f"{perm} not in available permissions"
         if perm == "bot_control":
             for c in msg.conn.admins:
                 if fnmatch(mask, c):
