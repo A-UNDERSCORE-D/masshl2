@@ -65,6 +65,7 @@ class Bot:
             if connection.connected:
                 connection.close()
 
+        self.config.save()
         self.running = False
 
     def restart(self, reason=None):
