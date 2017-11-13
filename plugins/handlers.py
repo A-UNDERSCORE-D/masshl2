@@ -210,7 +210,7 @@ def onnotice(connection, args, prefix):
 
 def on_msg(msg: 'Message', conn: 'Connection'):
     todos = []
-    todos.extend(conn.bot.call_hook("message", msg=msg) or [])
+    todos.extend(conn.bot.call_hook("message", msg=msg, handle_errors=False) or [])
 
     def _handle_todos(tds):
         for hook, resp in tds:
