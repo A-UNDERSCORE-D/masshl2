@@ -16,8 +16,8 @@ def parse_prefix(prefix):
 
 
 class Message:
-    def __init__(self, connection, args, prefix, msg_type):
-        self.conn: Connection = connection
+    def __init__(self, connection: 'Connection', args, prefix, msg_type):
+        self.conn = connection
         self.args = args
         self.prefix = prefix
         self.type = msg_type
@@ -49,8 +49,11 @@ class Message:
     def is_chan_message(self) -> bool:
         return isinstance(self.target, Channel)
 
+    def casefold(self):
+        return self.message.casefold()
+
     def __str__(self):
-        return self.prefix + " :" + " ".join(self.args)
+        return f"{self.prefix} {self.type} :{' '.join(self.args)}"
 
     def __len__(self):
         return len(self.s_msg)
