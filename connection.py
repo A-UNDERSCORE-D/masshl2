@@ -31,9 +31,6 @@ class Connection:
         self._adminchan: str = config["adminchan"]
         self.admins: List[str] = config["admins"]
         self.cmdprefix: str = config["cmdprefix"]
-        self.global_nickignore: List[str] = config["global_nickignore"]
-        self.global_maskignore: List[str] = config["global_maskignore"]
-        self.bot_nicks: List[str] = config["bot_nicks"]
         self.print_raw: bool = config["print_raw"]
         self.bot: 'Bot' = bot
         self.name: str = name
