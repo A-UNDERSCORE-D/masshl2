@@ -14,7 +14,7 @@ def watchdog(bot):
         bot.log.debug(f"Startup took {startup_time}s.")
     elif last != 0 and now - last > 1.5:
         exec_time = round(now - last, 3)
-        bot.log_everywhere(f"WARNING: Something is talking too long. Tick took {exec_time}s.")
+        bot.log_everywhere(f"WARNING: Something is taking too long. Tick took {exec_time}s.")
     last = time.time()
 
 
