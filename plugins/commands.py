@@ -6,6 +6,7 @@ from hook import message, command
 if TYPE_CHECKING:
     from parser import Message
 
+# TODO: Add a ~recv command, emulates hexchat's /recieve
 
 @message
 def on_msg(msg: 'Message'):
