@@ -50,7 +50,7 @@ class Connection:
 
         self.log = Logger(self)
 
-        # Isupport stuff
+        # ISupport stuff
 
         # adds or removes to a list, always has a parameter from the server
         self.a_modes = set()
@@ -142,11 +142,11 @@ class Connection:
         }
         responses = self.bot.call_hook("raw", **data)
         responses.extend(self.bot.call_hook("raw_" + cmd, **data))
-        for _, resp in responses:
-            if isinstance(resp, Exception):
-                self.log.exception(resp)
-            elif resp:
-                self.log(resp)
+        # for _, resp in responses:
+        #     if isinstance(resp, Exception):
+        #         self.log.exception(resp)
+        #     elif resp:
+        #         self.log(resp)
 
     def join(self, channels):
         chanstojoin: str = ""
