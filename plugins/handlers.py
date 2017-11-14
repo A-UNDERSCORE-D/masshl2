@@ -14,12 +14,12 @@ def identify(connection):
 
 
 @raw("PING")
-def onping(connection, args):
+def on_ping(connection, args):
     connection.write("PONG :" + " ".join(args))
 
 
 @raw("AUTHENTICATE")
-def sendauth(connection):
+def send_auth(connection):
     auth_string = (connection.nick + "\00" + connection.nsuser + "\00"
                    + connection.nspass).encode()
 
@@ -29,7 +29,7 @@ def sendauth(connection):
 
 
 @raw("CAP")
-def handlecap(connection, args):
+def handle_cap(connection, args):
     caps = args[1].split("=")
     command = caps[0]
     if command == "LS":
@@ -40,57 +40,57 @@ def handlecap(connection, args):
         else:
             for cap in caps:
                 connection.write("CAP REQ :{}".format(cap))
-                capincrement(connection)
+                cap_increment(connection)
 
     elif command == "ACK":
         cap = args[2]
         if cap == "sasl":
             connection.cansasl = True
-            capincrement(connection)
+            cap_increment(connection)
             connection.write("AUTHENTICATE PLAIN")
         elif cap == "userhost-in-names":
             connection.uhnames = True
 
-        capdecrement(connection)
+        cap_decrement(connection)
 
     elif command == "NAK":
         cap = args[2]
-        capdecrement(connection)
+        cap_decrement(connection)
         if cap == "userhost-in-names":
             connection.uhnames = False
         elif cap == "sasl":
             connection.cansasl = False
 
 
-def capincrement(connection):
+def cap_increment(connection):
     connection.capcount += 1
 
 
-def capdecrement(connection):
+def cap_decrement(connection):
     connection.capcount -= 1
     if connection.capcount <= 0:
         connection.write("CAP END")
 
 
 @raw("903")
-def goodsasl(connection):
-    capdecrement(connection)
+def good_sasl(connection):
+    cap_decrement(connection)
 
 
 @raw("904")
-def badsasl(connection):
-    capdecrement(connection)
+def bad_sasl(connection):
+    cap_decrement(connection)
     connection.log("SASL login failed, attempting PRIVMSG based login")
     connection.cansasl = False
 
 
 @raw("001")
-def onwelcome(connection, prefix):
+def on_welcome(connection, prefix):
     connection.server = prefix
 
 
 @raw("005")
-def onisupport(connection, args):
+def on_isupport(connection, args):
     tokens = args[1:-1]
     for token in tokens:
         if "=" in token:
@@ -132,7 +132,7 @@ def onisupport(connection, args):
 
 
 @raw("376")
-def onendmotd(connection):
+def on_end_motd(connection):
     if not connection.cansasl:
         identify(connection)
     for command in connection.commands:
@@ -142,7 +142,7 @@ def onendmotd(connection):
 
 
 @raw("353")
-def onnames(connection, args):
+def on_names(connection, args):
     names = args[3].split()
     chan: Channel = connection.channels[args[2]]
 
@@ -173,15 +173,14 @@ def onnames(connection, args):
 
 
 @raw("366")
-def onnamesend(connection, args):
+def on_name_send(connection, args):
     chan = connection.channels[args[1]]
     chan.receivingnames = False
     logchan(chan)
 
 
 @raw("JOIN")
-def onjoin(connection, prefix, args):
-    print("ONJOIN CALLED")
+def on_join(connection, prefix, args):
     name = args[0]
     chan = connection.channels.get(args[0])
     nick = prefix.split("!")[0]
@@ -197,7 +196,7 @@ def onjoin(connection, prefix, args):
 
 
 @raw("PRIVMSG")
-def onprivmsg(connection, args, prefix):
+def on_privmsg(connection, args, prefix):
     msg = parser.Message(connection, args, prefix, "PRIVMSG")
     on_msg(msg, connection)
 
@@ -224,9 +223,9 @@ def on_msg(msg: 'Message', conn: 'Connection'):
                                    f"I want their head. Exception: {type(resp).__name__}: {str(resp)}. "
                                    f"see stdout for trace")
             elif callable(resp):
-                respmsg = resp()
-                if respmsg:
-                    msg.target.send_message(str(respmsg))
+                resp_msg = resp()
+                if resp_msg:
+                    msg.target.send_message(str(resp_msg))
             elif isinstance(resp, list):
                 for response in conn.bot.handle_todos(resp, ret=True):
                     msg.target.send_message(str(response))
@@ -238,10 +237,10 @@ def on_msg(msg: 'Message', conn: 'Connection'):
 
 
 @raw("MODE")
-def onmode(connection, args):
+def on_mode(connection, args):
     target = args[0]
     modes = args[1]
-    modeargs = args[2:]
+    mode_args = args[2:]
     adding = True
     count = 0
     if target == connection.nick:
@@ -262,23 +261,23 @@ def onmode(connection, args):
         elif mode in connection.d_modes:
             pass
         elif mode in connection.p_modes:
-            nick = modeargs[count]
+            nick = mode_args[count]
             connection.log(str(("+" if adding else "-") + mode + " " + nick))
             membership = chan.memberships[nick]
             if mode == "o":
-                membership.isop = adding
+                membership.is_op = adding
             elif mode == "h":
-                membership.ishop = adding
+                membership.is_hop = adding
             elif mode == "v":
-                membership.isvoice = adding
+                membership.is_voice = adding
             elif mode == "Y":
-                membership.isadmin = adding
+                membership.is_admin = adding
             count += 1
             logchan(chan)
 
 
 @raw("PART")
-def onpart(connection, prefix, args):
+def on_part(connection, prefix, args):
     chan_name = args[0]
     try:
         chan = connection.channels[chan_name]
@@ -303,25 +302,25 @@ def onpart(connection, prefix, args):
 
 
 @raw("KICK")
-def onkick(connection, args):
-    knick = args[1]
-    kchan = args[0]
+def on_kick(connection, args):
+    kicked_nick = args[1]
+    kicked_chan = args[0]
 
     try:
-        user = connection.users[knick]
+        user = connection.users[kicked_nick]
     except KeyError:
         connection.log("Handling kick for non-existent user")
         return
 
     try:
-        chan = connection.channels[kchan]
+        chan = connection.channels[kicked_chan]
     except KeyError:
         connection.log("Handling kick from non-existent channel")
         return
 
     if user.nick == connection.nick:
-        connection.log("We were kicked from {}".format(kchan))
-        del connection.channels[kchan]
+        connection.log("We were kicked from {}".format(kicked_chan))
+        del connection.channels[kicked_chan]
         connection.log(connection.channels)
     else:
         chan.deluser(user)
@@ -329,24 +328,24 @@ def onkick(connection, args):
 
 
 @raw("NICK")
-def onnick(connection, prefix, args):
+def on_nick(connection, prefix, args):
     if not prefix:
         raise ValueError
-    onick = prefix.split("!")[0]
-    nnick = args[0]
-    if onick == connection.nick:
-        connection.nick = nnick
+    old_nick = prefix.split("!")[0]
+    new_nick = args[0]
+    if old_nick == connection.nick:
+        connection.nick = new_nick
     try:
-        user = connection.users[onick]
+        user = connection.users[old_nick]
     except KeyError:
         connection.log("Attempted to renick a non-existent user")
         return
-    user.renick(nnick)
+    user.renick(new_nick)
     logall(connection)
 
 
 @raw("QUIT")
-def onquit(connection, prefix):
+def on_quit(connection, prefix):
     nick = prefix.split("!")[0]
     try:
         user = connection.users[nick]
@@ -358,7 +357,7 @@ def onquit(connection, prefix):
 
 
 @unload
-def onunload(bot):
+def on_unload(bot):
     plugins = list(bot.plugins.keys())
     if __name__ in plugins:
         plugins.remove(__name__)

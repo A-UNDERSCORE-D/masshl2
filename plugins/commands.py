@@ -14,14 +14,14 @@ def on_msg(msg: 'Message'):
         return
     args = []
     if msg.message.startswith(msg.conn.cmdprefix):
-        cmd = msg.s_msg[0][1:]
+        cmd = msg.split_msg[0][1:]
         if len(msg) > 1:
-            args = msg.s_msg[1:]
+            args = msg.split_msg[1:]
     elif msg.startswith(msg.conn.nick):
         if len(msg) >= 2:
-            cmd = msg.s_msg[1]
+            cmd = msg.split_msg[1]
             if len(msg) > 2:
-                args = msg.s_msg[2:]
+                args = msg.split_msg[2:]
         else:
             return
     else:
@@ -121,7 +121,7 @@ def cmd_part(args, conn):
 
 
 @command("eval")
-def command_eval(bot, conn):
+def command_eval(bot):
     print(bot.hooks)
     return str(bot.hooks)
 
@@ -157,7 +157,7 @@ def cmd_dumpcfg(bot):
 
 
 @command("toggle_log", perm=["bot_control"])
-def cmd_logtoggle(conn):
+def cmd_log_toggle(conn):
     conn.print_raw = not conn.print_raw
 
 

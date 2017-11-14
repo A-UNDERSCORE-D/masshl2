@@ -40,7 +40,7 @@ config = None
 
 # Fetch our config if it exists, if not, make it exist
 @load
-def onload(bot):
+def on_load(bot):
     plugin_data = bot.config["plugin_data"]
     if not plugin_data.get(__plugin_name__):
         plugin_data[__plugin_name__] = DEFAULT_CONFIG.copy()
@@ -73,7 +73,7 @@ def try_ban(chan: Channel, user: User):
 
 
 @message
-def onmsg(msg: 'Message'):
+def on_msg(msg: 'Message'):
     if msg.conn.name not in config["networks"]:
         if config["global"]["debug"] >= 3:
             msg.conn.log(f"got a message on a channel we don't watch. It was {msg}")
@@ -91,7 +91,7 @@ def onmsg(msg: 'Message'):
 
 
 @command("masshl_set_debug", perm=["bot_control"])
-def debugprint(args):
+def debug_print(args):
     if len(args) >= 1:
         try:
             config["global"]["debug"] = int(args[0])

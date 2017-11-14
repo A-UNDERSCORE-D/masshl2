@@ -25,7 +25,7 @@ class Message:
         self.origin: typing.Optional[User]
         self.message: str = ""
         self._parse_msg(prefix, args)
-        self.s_msg = self.message.split(" ")
+        self.split_msg = self.message.split(" ")
         self.eol_msg = [' '.join(args[i:]) for i in range(len(args))]
 
     @property
@@ -56,13 +56,13 @@ class Message:
         return f"{self.prefix} {self.type} :{' '.join(self.args)}"
 
     def __len__(self):
-        return len(self.s_msg)
+        return len(self.split_msg)
 
     def __eq__(self, other):
         return self.message == other
 
     def __contains__(self, item):
-        return item in self.s_msg or item in self.message
+        return item in self.split_msg or item in self.message
 
     def startswith(self, other: str) -> bool:
         return self.message.startswith(other)
