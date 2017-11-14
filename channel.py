@@ -1,11 +1,13 @@
 from membership import Membership
 from user import User
-from typing import Dict, DefaultDict
+from typing import Dict, DefaultDict, Union, List, TYPE_CHECKING
 from collections import defaultdict
+if TYPE_CHECKING:
+    from connection import Connection
 
 
 class Channel:
-    def __init__(self, name: str, connection):
+    def __init__(self, name: str, connection: 'Connection'):
 
         self.name = name if name[0] != ":" else name[1:]
         self.modes = ""
@@ -42,8 +44,8 @@ class Channel:
         :return: Membership, the membership object created
         """
         if user.nick in connection.users:
-            temp = Membership(self, user, isop=isop, ishop=ishop,
-                              isvoice=isvoice, isadmin=isadmin)
+            temp = Membership(self, user, is_op=isop, is_hop=ishop,
+                              is_voice=isvoice, is_admin=isadmin)
             self.memberships[user.nick] = temp
             user.memberships[self.name] = temp
             return temp
@@ -76,3 +78,16 @@ class Channel:
 
     def send_notice(self, msg: str):
         self.connection.write(f"NOTICE {self.name} :{msg}")
+
+    @property
+    def conn(self):
+        return self.connection
+
+    def set_modes(self, modes: Dict):
+        to_set = {}
+        for mode in modes:
+            assert mode in self.conn.channel_modes, f"mode {mode} is not a valid channel mode on {self.conn.name}"
+            if mode in self.conn.a_modes:
+                pass
+
+
