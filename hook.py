@@ -1,8 +1,62 @@
 from typing import Callable, List
+import inspect
 
 
-# TODO: Is there a reason this doesnt just load the Hook object onto the attribute?
-def hook(*name, func=None, permissions=None, data=None) -> Callable:
+class Hook:
+    def __init__(self, hook_name: str, plugin: str, func: Callable, real_hook: 'RealHook',
+                 req_perms: List = None, data=None):
+        self.hook_name = hook_name
+        self.plugin = plugin
+        self.func = func
+        self.perms: List = req_perms if req_perms is not None else []
+        self.data = data
+        self.real_hook = real_hook
+
+    def __str__(self):
+        return f"{self.hook_name}: {self.plugin}; {self.func}"
+
+
+class RealHook:
+    def __init__(self, init_hook: Hook, bot):
+        self.bot = bot
+        self.name = init_hook.hook_name
+        self.plugin = init_hook.plugin
+        self.func = init_hook.func
+        self.perms = init_hook.perms
+        self.data = init_hook.data
+
+    def __str__(self):
+        return f"{self.name}: {self.plugin}; {self.func}"
+
+    def fire(self, **kwargs):
+        sig = inspect.signature(self.func)
+        kwargs["bot"] = self.bot
+        kwargs["start_time"] = self.bot.start_time
+        kwargs["hook"] = self
+        args = []
+        for arg in sig.parameters:
+            assert arg in kwargs, \
+                f"Callback requested an argument that the hook launcher was not passed. it was '{arg}'"
+            args.append(kwargs[arg])
+        try:
+            self.bot.log(self.func)
+            ret = self.func(*args)
+            return self.handle_return(ret)
+        except Exception as e:
+            self.handle_error(e)
+
+    def handle_error(self, error):
+        self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}")
+        self.bot.log.exception(error)
+
+    def handle_return(self, ret):
+        if callable(ret):
+            return ret
+        else:
+            self.bot.log(str(ret))
+
+
+def hook(*name, real_hook=RealHook, func=None, permissions=None, data=None) -> Callable:
     def _decorate(f):
         try:
             hook_list = getattr(f, "_IsHook")
@@ -10,24 +64,14 @@ def hook(*name, func=None, permissions=None, data=None) -> Callable:
             hook_list = []
             setattr(f, "_IsHook", hook_list)
         # hook_list.extend((_hook.lower(), permissions) for _hook in name)
-        hook_list.extend((Hook(_hook.lower(), f.__module__, f, permissions, data) for _hook in name))
+        hook_list.extend((Hook(_hook.lower(), f.__module__, f, real_hook, permissions, data) for _hook in name))
         return f
+
     if func is not None:
         return _decorate(func)
     else:
         return _decorate
 
-
-class Hook:
-    def __init__(self, hook_name: str, plugin: str, func: Callable, req_perms: List = None, data=None):
-        self.hook_name = hook_name
-        self.plugin = plugin
-        self.func = func
-        self.perms: List = req_perms if req_perms is not None else []
-        self.data = data
-
-    def __str__(self):
-        return f"{self.hook_name}: {self.plugin}; {self.func}"
 
 
 # Below are for ease of use

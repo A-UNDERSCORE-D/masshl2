@@ -11,12 +11,12 @@ from fnmatch import fnmatch
 from config import Config
 from connection import Connection
 from logger import Logger
-from hook import Hook
+from hook import Hook, RealHook
 from permissions import check
 
 
 class Bot:
-    def __init__(self, name="masshl"):
+    def __init__(self, name="Bot"):
         self.connections: List[Connection] = []
         self.selector = DefaultSelector()
         self.config = Config()
@@ -24,7 +24,7 @@ class Bot:
         self.is_restarting = False
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
-        self.hooks: Dict[str, List[Hook]] = defaultdict(list)
+        self.hooks: Dict[str, List[RealHook]] = defaultdict(list)
         self.name = name
         self.log = Logger(self)
         self.storage: DefaultDict[str, Dict] = defaultdict(dict)
@@ -159,7 +159,7 @@ class Bot:
                     continue
                 else:
                     self.log.debug(f"loading new hook {hook}" + (f" Hook requested {hook.perms}" if hook.perms else ""))
-                    self.hooks[hook.hook_name].append(hook)
+                    self.hooks[hook.hook_name].append(hook.real_hook(hook, self))
                     delattr(func, "_IsHook")
 
     def launch_hook_func(self, func: Callable, **kwargs):
@@ -174,25 +174,33 @@ class Bot:
         return func(*args)
 
     def call_hook(self, name, handle_errors=True, **kwargs) -> list:
-        todos = []
-        name = name.lower()
-        if name not in self.hooks:
-            return todos
-        for hook in self.hooks[name]:
-            if hook.perms and not check(kwargs["msg"], hook.perms):
-                kwargs["msg"].origin.send_notice("Sorry, you are not allowed to use this command")
-                continue
-            try:
-                resp = self.launch_hook_func(hook.func, **kwargs)
-            except Exception as e:
-                todos.append((hook, e))
-                self.log.exception(e)
-                if handle_errors:
-                    self.log(f"Exception in {name}: {hook}")
-                    self.log_adminchans(f"Exception in {hook}: {type(e).__name__}: {str(e)}")
-            else:
-                todos.append((hook, resp))
-        return todos
+        tds = []
+        for hook in self.hooks[name.lower()]:
+            tds.append(hook.fire(**kwargs))
+        for todo in tds:
+            if callable(todo):
+                todo()
+                tds.remove(todo)
+        return tds
+        # todos = []
+        # name = name.lower()
+        # if name not in self.hooks:
+        #     return todos
+        # for hook in self.hooks[name]:
+        #     if hook.perms and not check(kwargs["msg"], hook.perms):
+        #         kwargs["msg"].origin.send_notice("Sorry, you are not allowed to use this command")
+        #         continue
+        #     try:
+        #         resp = self.launch_hook_func(hook.func, **kwargs)
+        #     except Exception as e:
+        #         todos.append((hook, e))
+        #         self.log.exception(e)
+        #         if handle_errors:
+        #             self.log(f"Exception in {name}: {hook}")
+        #             self.log_adminchans(f"Exception in {hook}: {type(e).__name__}: {str(e)}")
+        #     else:
+        #         todos.append((hook, resp))
+        # return todos
 
     def handle_todos(self, todos, ret=False) -> list:
         resp = []
