@@ -32,6 +32,7 @@ class Message:
     def bot(self) -> 'Bot':
         return self.conn.bot
 
+# TODO: suppress the error messages during connect, they're not needed then and add to clutter
     def _parse_msg(self, prefix, args):
         nick, user, host = parse_prefix(prefix)
         if args[0][0] in self.conn.chantypes:
