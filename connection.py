@@ -90,7 +90,7 @@ class Connection:
             if not data:
                 self.close()
             else:
-                self.parse(data)
+                self.handle_data(data)
 
     def write(self, data):
         if not self.connected:
@@ -104,46 +104,49 @@ class Connection:
             if self.print_raw:
                 self.log.ircout(data)
 
-    def parse(self, data):
+    def handle_data(self, data):
         self.buffer += data
         while b"\r\n" in self.buffer:
             raw, self.buffer = self.buffer.split(b"\r\n", 1)
             line = raw.decode(errors="replace")
-            if self.print_raw:
-                self.log.ircin(line)
-            if line[0] == "@":
-                tags, line = line.split(None, 1)
-            else:
-                tags = None
-            if line[0] == ":":
-                prefix, line = line.split(None, 1)
-                prefix = prefix[1:]
-            else:
-                prefix = None
+            self.parse(line)
 
-            args = line.split(" ")
-            cmd = args.pop(0)
-            i = 0
-            while i < len(args):
-                if args[i][0] == ":":
-                    args[i] = " ".join(args[i:])[1:]
-                    del args[i + 1:]
-                i += 1
+    def parse(self, line):
+        if self.print_raw:
+            self.log.ircin(line)
+        if line[0] == "@":
+            tags, line = line.split(None, 1)
+        else:
+            tags = None
+        if line[0] == ":":
+            prefix, line = line.split(None, 1)
+            prefix = prefix[1:]
+        else:
+            prefix = None
 
-            data = {
-                "connection": self,
-                "prefix":     prefix,
-                "tags":       tags,
-                "cmd":        cmd,
-                "args":       args
-            }
-            responses = self.bot.call_hook("raw", **data)
-            responses.extend(self.bot.call_hook("raw_" + cmd, **data))
-            for _, resp in responses:
-                if isinstance(resp, Exception):
-                    self.log.exception(resp)
-                elif resp:
-                    self.log(resp)
+        args = line.split(" ")
+        cmd = args.pop(0)
+        i = 0
+        while i < len(args):
+            if args[i][0] == ":":
+                args[i] = " ".join(args[i:])[1:]
+                del args[i + 1:]
+            i += 1
+
+        data = {
+            "connection": self,
+            "prefix":     prefix,
+            "tags":       tags,
+            "cmd":        cmd,
+            "args":       args
+        }
+        responses = self.bot.call_hook("raw", **data)
+        responses.extend(self.bot.call_hook("raw_" + cmd, **data))
+        for _, resp in responses:
+            if isinstance(resp, Exception):
+                self.log.exception(resp)
+            elif resp:
+                self.log(resp)
 
     def join(self, channels):
         chanstojoin: str = ""
