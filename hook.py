@@ -65,6 +65,6 @@ def tick(func) -> Callable:
     return hook("tick", func=func)
 
 
-# Timer isnt guaranteed to happen at the time, but will always happen after
+# Timer isn't guaranteed to happen at the time, but will never be early
 def timer(time) -> Callable:
     return hook(f"timer_{time}")
