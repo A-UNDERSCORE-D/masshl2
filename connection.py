@@ -212,3 +212,7 @@ class Connection:
             self.adminchan.send_message(msg)
         else:
             self.log.error(msg)
+
+    @property
+    def channel_modes(self):
+        return self.a_modes | self.b_modes | self.c_modes | self.p_modes
