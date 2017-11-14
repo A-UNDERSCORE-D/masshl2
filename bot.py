@@ -149,10 +149,12 @@ class Bot:
     def _load_hooks(self, plugin, name, filters: str =None):
         self.log.debug(f"Loading {name}'s hooks." + (f" Filtered to {filters}" if filters else ""))
         for func in plugin.__dict__.values():
-            # self.log.debug(f"checking {func} in {plugin}")
-            if not hasattr(func, "_IsHook"):
+            if not callable(func):
                 continue
-            hooks = getattr(func, "_IsHook")
+            try:
+                hooks = getattr(func, "_IsHook")
+            except AttributeError:
+                continue
             for hook in hooks:
                 if filters is not None and not fnmatch(hook.hook_name, filters):
                     self.log.debug(f"SKIPPING {hook}, does not match filter ('{filters}')")
