@@ -1,6 +1,7 @@
 from typing import Callable, List
 import inspect
 
+# TODO: make hooks manage the firing of events, or create an event object that stores hooks and fires them when needed.
 
 class Hook:
     def __init__(self, hook_name: str, plugin: str, func: Callable, real_hook: 'RealHook',
@@ -18,12 +19,14 @@ class Hook:
 
 class RealHook:
     def __init__(self, init_hook: Hook, bot):
+        self.errors = []
         self.bot = bot
         self.name = init_hook.hook_name
         self.plugin = init_hook.plugin
         self.func = init_hook.func
         self.perms = init_hook.perms
         self.data = init_hook.data
+        self.todo = []
 
     def __str__(self):
         return f"{self.name}: {self.plugin}; {self.func}"
@@ -38,22 +41,32 @@ class RealHook:
             assert arg in kwargs, \
                 f"Callback requested an argument that the hook launcher was not passed. it was '{arg}'"
             args.append(kwargs[arg])
-        try:
-            self.bot.log(self.func)
-            ret = self.func(*args)
-            return self.handle_return(ret)
-        except Exception as e:
-            self.handle_error(e)
+        #try:
+            # self.bot.log(self.func)
+        return self.func(*args)
+            # return self.handle_return(ret)
+        #except Exception as e:
+         #   self.handle_error(e)
 
-    def handle_error(self, error):
-        self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}")
-        self.bot.log.exception(error)
+    def handle_error(self):
+        for error in self.errors:
+            self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}")
+            self.bot.log.exception(error)
+        self.errors.clear()
 
-    def handle_return(self, ret):
-        if callable(ret):
-            return ret
-        else:
-            self.bot.log(str(ret))
+    def handle_return(self):
+        print(self.todo)
+        for todo in reversed(self.todo):
+            if callable(todo):
+                todo()
+            else:
+                self.bot.log(todo)
+        self.todo.clear()
+
+
+    def post_hook(self):
+        self.handle_error()
+        self.handle_return()
 
 
 def hook(*name, real_hook=RealHook, func=None, permissions=None, data=None) -> Callable:
