@@ -13,6 +13,7 @@ from connection import Connection
 from logger import Logger
 from hook import Hook, RealHook
 from permissions import check
+from event import EventManager
 
 
 class Bot:
@@ -29,6 +30,9 @@ class Bot:
         self.log = Logger(self)
         self.storage: DefaultDict[str, Dict] = defaultdict(dict)
         self.start_time = time.time()
+
+        # Event Mangler
+        self.event_manager = EventManager(self)
 
     def run(self) -> bool:
         self._load_plugins()
@@ -126,19 +130,22 @@ class Bot:
     def unload(self, name):
         if not name.startswith("plugins."):
             name = "plugins." + name
+
+        self.event_manager.fire_event(f"on_unload_{name}")
+        self.event_manager.remove_plugin_hooks(name)
         if name in self.plugins:
             del self.plugins[name]
             self.log.debug(f"REMOVING PLUGIN: {name}")
-        todo = []
-        for hook_name, hook_list in self.hooks.items():
-            for hook in reversed(hook_list):
-                if hook.plugin == name:
-                    if hook_name == f"on_unload_{name}":
-                        todo.extend(self.call_hook(f"on_unload_{name}"))
-                    self.log.debug(f"REMOVING HOOK: {hook_name}: {hook}")
-                    hook_list.remove(hook)
-        self._cleanup_hooks()
-        self.handle_todos(todo)
+        # todo = []
+        # for hook_name, hook_list in self.hooks.items():
+        #     for hook in reversed(hook_list):
+        #         if hook.plugin == name:
+        #             if hook_name == f"on_unload_{name}":
+        #                 todo.extend(self.call_hook(f"on_unload_{name}"))
+        #             self.log.debug(f"REMOVING HOOK: {hook_name}: {hook}")
+        #             hook_list.remove(hook)
+        # self._cleanup_hooks()
+        # self.handle_todos(todo)
 
     def _cleanup_hooks(self):
         new_hooks = {n: h for n, h in self.hooks.items() if h}
@@ -161,7 +168,9 @@ class Bot:
                     continue
                 else:
                     self.log.debug(f"loading new hook {hook}" + (f" Hook requested {hook.perms}" if hook.perms else ""))
-                    self.hooks[hook.hook_name].append(hook.real_hook(hook, self))
+                    # self.hooks[hook.hook_name].append(hook.real_hook(hook, self))
+                    real_hook = hook.real_hook(hook, self)
+                    self.event_manager.add_hook(hook.hook_name, real_hook)
                     delattr(func, "_IsHook")
 
     def launch_hook_func(self, func: Callable, **kwargs):
@@ -176,14 +185,19 @@ class Bot:
         return func(*args)
 
     def call_hook(self, name, handle_errors=True, **kwargs) -> list:
-        tds = []
-        for hook in self.hooks[name.lower()]:
-            tds.append(hook.fire(**kwargs))
-        for todo in tds:
-            if callable(todo):
-                todo()
-                tds.remove(todo)
-        return tds
+        self.event_manager.fire_event(name, **kwargs)
+        return []
+
+        # tds = []
+        # for hook in self.hooks[name.lower()]:
+        #     tds.append(hook.fire(**kwargs))
+        # for todo in tds:
+        #     if callable(todo):
+        #         todo()
+        #         tds.remove(todo)
+        # return tds
+
+
         # todos = []
         # name = name.lower()
         # if name not in self.hooks:
