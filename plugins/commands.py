@@ -5,6 +5,7 @@ from hook import message, command
 
 if TYPE_CHECKING:
     from parser import Message
+    from hook import MessageHook
 
 # TODO: Add a ~recv command, emulates hexchat's /recieve
 
@@ -124,9 +125,11 @@ def cmd_part(args, conn):
 
 
 @command("eval")
-def command_eval(bot):
-    print(bot.hooks)
-    return str(bot.hooks)
+def command_eval(bot, hook: 'MessageHook'):
+    def todo():
+        hook.msg.target.send_message("Test2")
+    #return str(f"Test: {hook}, {bot}")
+    return todo
 
 
 @command("config", perm=["bot_control"])
