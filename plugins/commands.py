@@ -8,8 +8,9 @@ if TYPE_CHECKING:
 
 # TODO: Add a ~recv command, emulates hexchat's /recieve
 
+
 @message
-def on_msg(msg: 'Message'):
+def on_msg(msg: 'Message', hook):
     if not msg.target:
         return
     args = []
@@ -34,6 +35,7 @@ def on_msg(msg: 'Message'):
         "conn": msg.conn,
         "bot":  msg.bot
     }
+    print("command:", hook)
     return msg.bot.call_hook(f"cmd_{cmd}", **data)
 
 
@@ -43,7 +45,8 @@ def msgme(msg: 'Message', args):
 
 
 @command("reload", perm=["bot_control"])
-def reload(msg: 'Message', args):
+def reload(msg: 'Message', args, hook):
+    print(hook)
     if len(args) < 1:
         msg.target.send_message("reload requires an argument")
         return
