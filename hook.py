@@ -56,7 +56,7 @@ class RealHook:
     def handle_error(self):
         done = []
         for error in self.errors:
-            self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}")
+            self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}. See stdout for trace.")
             self.bot.log.exception(error)
             done.append(error)
         self.errors[:] = [e for e in self.errors if e not in done]
@@ -83,6 +83,9 @@ class MessageHook(RealHook):
         super().__init__(init_hook, bot)
         self.msg: 'Message' = None
 
+        # Because pycharm... again
+        return
+
     def fire(self, **kwargs):
         self.msg = kwargs["msg"]
         super().fire(**kwargs)
@@ -96,8 +99,8 @@ class MessageHook(RealHook):
                 msg = todo()
             else:
                 msg = str(todo)
-            self.bot.log(f"[MESSAGE HOOK] returned {msg}")
-            self.msg.target.send_message(msg)
+            if msg:
+                self.msg.target.send_message(msg)
             done.append(todo)
         self.todo[:] = [t for t in self.todo if t not in done]
 
