@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from typing import List, Union
     from bot import Bot
 
+socket.setdefaulttimeout(5)
+
 
 class Connection:
     def __init__(self, config: dict, selector, bot, name, debug):
@@ -75,22 +77,20 @@ class Connection:
 
     # TODO: Support IRCv3.2 CAPS, CAP LS 302
     def connect(self):
+        def debuglog(msg):
+            if self.debug:
+                self.log.debug(msg)
+        debuglog("called")
         if self.is_ssl:
             self.socket = ssl.wrap_socket(self.socket)
+        debuglog("connect start")
         self.socket.connect((self.host, self.port))
+        debuglog("connect end")
         self.connected = True
         self.selector.register(self, EVENT_READ)
         self.write("CAP LS")
         self.write("NICK {nick}".format(nick=self.nick))
         self.write("USER {user} * * :{gecos}".format(user=self.user, gecos=self.gecos))
-
-    def read(self):
-        if self.connected:
-            data = self.socket.recv(65535)
-            if not data:
-                self.close()
-            else:
-                self.handle_data(data)
 
     def write(self, data):
         if not self.connected:
@@ -103,6 +103,14 @@ class Connection:
             self.socket.send((data + "\r\n").encode())
             if self.print_raw:
                 self.log.ircout(data)
+
+    def read(self):
+        if self.connected:
+            data = self.socket.recv(65535)
+            if not data:
+                self.close()
+            else:
+                self.handle_data(data)
 
     def handle_data(self, data):
         self.buffer += data
