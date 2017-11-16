@@ -80,7 +80,7 @@ class Bot:
 
     def _load_plugins(self):
         path = pathlib.Path("plugins").resolve().relative_to(self.cwd)
-        for file in path.glob("*.py"):
+        for file in path.glob("[!_]*.py"):
             self.load_plugin('.'.join(file.parts).rsplit('.', 1)[0])
 
     def load_plugin(self, name: Union[List, str]):
