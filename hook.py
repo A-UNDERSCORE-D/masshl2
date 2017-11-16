@@ -1,7 +1,11 @@
-from typing import Callable, List
+from typing import Callable, List, TYPE_CHECKING
 import inspect
 
+if TYPE_CHECKING:
+    from parser import Message
+
 # TODO: make hooks manage the firing of events, or create an event object that stores hooks and fires them when needed.
+
 
 class Hook:
     def __init__(self, hook_name: str, plugin: str, func: Callable, real_hook: 'RealHook',
@@ -27,9 +31,10 @@ class RealHook:
         self.perms = init_hook.perms
         self.data = init_hook.data
         self.todo = []
+        self.type = self.__class__.__name__
 
     def __str__(self):
-        return f"{self.name}: {self.plugin}; {self.func}"
+        return f"{self.type} '{self.name}': {self.plugin}; {self.func}"
 
     def fire(self, **kwargs):
         sig = inspect.signature(self.func)
@@ -41,32 +46,60 @@ class RealHook:
             assert arg in kwargs, \
                 f"Callback requested an argument that the hook launcher was not passed. it was '{arg}'"
             args.append(kwargs[arg])
-        #try:
-            # self.bot.log(self.func)
-        return self.func(*args)
-            # return self.handle_return(ret)
-        #except Exception as e:
-         #   self.handle_error(e)
+        try:
+            ret = self.func(*args)
+            if ret:
+                self.todo.append(ret)
+        except Exception as e:
+            self.errors.append(e)
 
     def handle_error(self):
+        done = []
         for error in self.errors:
             self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}")
             self.bot.log.exception(error)
-        self.errors.clear()
+            done.append(error)
+        self.errors[:] = [e for e in self.errors if e not in done]
 
     def handle_return(self):
-        print(self.todo)
-        for todo in reversed(self.todo):
+        if self.todo:
+            print(self.todo)
+        done = []
+        for todo in self.todo:
             if callable(todo):
                 todo()
             else:
                 self.bot.log(todo)
-        self.todo.clear()
-
+            done.append(todo)
+        self.todo[:] = [t for t in self.todo if t not in done]
 
     def post_hook(self):
         self.handle_error()
         self.handle_return()
+
+
+class MessageHook(RealHook):
+    def __init__(self, init_hook: Hook, bot):
+        super().__init__(init_hook, bot)
+        self.msg: 'Message' = None
+
+    def fire(self, **kwargs):
+        self.msg = kwargs["msg"]
+        super().fire(**kwargs)
+
+    def handle_return(self):
+        done = []
+        print(self, self.todo)
+        for todo in self.todo:
+            msg = ""
+            if callable(todo):
+                msg = todo()
+            else:
+                msg = str(todo)
+            self.bot.log(f"[MESSAGE HOOK] returned {msg}")
+            self.msg.target.send_message(msg)
+            done.append(todo)
+        self.todo[:] = [t for t in self.todo if t not in done]
 
 
 def hook(*name, real_hook=RealHook, func=None, permissions=None, data=None) -> Callable:
@@ -86,16 +119,13 @@ def hook(*name, real_hook=RealHook, func=None, permissions=None, data=None) -> C
         return _decorate
 
 
-
 # Below are for ease of use
-
-
 def raw(*name) -> Callable:
     return hook(*(("raw_" + n) for n in name))
 
 
 def message(func) -> Callable:
-    return hook("message", func=func)
+    return hook("message", func=func, real_hook=MessageHook)
 
 
 def load(func) -> Callable:
@@ -111,7 +141,7 @@ def channel_init(func) -> Callable:
 
 
 def command(*name, perm=None) -> Callable:
-    return hook(*(("cmd_" + n) for n in name), permissions=perm)
+    return hook(*(("cmd_" + n) for n in name), permissions=perm, real_hook=MessageHook)
 
 
 def connect_finish(func) -> Callable:
