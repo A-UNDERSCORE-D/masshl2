@@ -10,6 +10,9 @@ class EventManager:
         self.events: Dict[str, List[RealHook]] = defaultdict(list)
         self.bot = bot
 
+        # Because pycharm.
+        return
+
     def _launch_hook_functions(self, name: str, **kwargs):
         kwargs["bot"] = self.bot
         kwargs["event_manager"] = self
@@ -22,7 +25,8 @@ class EventManager:
                 hook.errors.append(e)
 
     def fire_event(self, name: str, **kwargs):
-        self.bot.log.debug(f"[EVENT MANAGER] running hook: {name}")
+        if name != "tick":
+            self.bot.log.debug(f"[EVENT MANAGER] running hook: {name}")
         self._launch_hook_functions(name, **kwargs)
         self.fire_post_event(name)
 
@@ -49,6 +53,3 @@ class EventManager:
             for hook in to_remove:
                 hook_list.remove(hook)
         self._cleanup_events()
-        # pprint(self.events)
-
-from pprint import pprint
