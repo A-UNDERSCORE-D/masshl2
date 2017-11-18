@@ -1,8 +1,11 @@
 from fnmatch import fnmatch
 from channel import Channel
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from parser import Message
 
 
-def check(msg, perms) -> bool:
+def check(msg: 'Message', perms) -> bool:
     # check global admins first, then channel. then do special cases for "is_op"/hop etc
     mask = msg.origin.mask
     msg.conn.log(mask)
