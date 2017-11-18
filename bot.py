@@ -11,13 +11,13 @@ from fnmatch import fnmatch
 from config import Config
 from connection import Connection
 from logger import Logger
-from hook import Hook, RealHook
+from hook import InitHook, Hook
 from permissions import check
 from event import EventManager
 
 
 class Bot:
-    def __init__(self, name="Bot"):
+    def __init__(self, name="Bot") -> None:
         self.connections: List[Connection] = []
         self.selector = DefaultSelector()
         self.config = Config()
@@ -25,7 +25,7 @@ class Bot:
         self.is_restarting = False
         self.plugins = {}
         self.cwd = pathlib.Path().resolve()
-        self.hooks: Dict[str, List[RealHook]] = defaultdict(list)
+        self.hooks: Dict[str, List[Hook]] = defaultdict(list)
         self.name = name
         self.log = Logger(self)
         self.storage: DefaultDict[str, Dict] = defaultdict(dict)
@@ -167,8 +167,10 @@ class Bot:
                     self.log.debug(f"SKIPPING {hook}, does not match filter ('{filters}')")
                     continue
                 else:
-                    self.log.debug(f"loading new hook {hook}" + (f" Hook requested {hook.perms}" if hook.perms else ""))
-                    # self.hooks[hook.hook_name].append(hook.real_hook(hook, self))
+                    to_log = f"loading new hook: {hook}"
+                    if hook.data:
+                        to_log += f" Hook has data; {hook.data}"
+                    self.log.debug(to_log)
                     real_hook = hook.real_hook(hook, self)
                     self.event_manager.add_hook(hook.hook_name, real_hook)
                     delattr(func, "_IsHook")
