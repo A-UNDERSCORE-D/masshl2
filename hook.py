@@ -1,5 +1,6 @@
-from typing import Callable, List, TYPE_CHECKING
+from typing import Callable, Dict, List, TYPE_CHECKING
 import inspect
+import permissions
 
 if TYPE_CHECKING:
     from parser import Message
@@ -7,28 +8,28 @@ if TYPE_CHECKING:
 # TODO: make hooks manage the firing of events, or create an event object that stores hooks and fires them when needed.
 
 
-class Hook:
-    def __init__(self, hook_name: str, plugin: str, func: Callable, real_hook: 'RealHook',
-                 req_perms: List = None, data=None):
+# Hook is loaded onto a function as an attribute by the hook function, its used to build a RealHook that is loaded onto
+# a bots EventManager
+class InitHook:
+    def __init__(self, hook_name: str, plugin: str, func: Callable, real_hook: 'Hook', data=None):
         self.hook_name = hook_name
         self.plugin = plugin
         self.func = func
-        self.perms: List = req_perms if req_perms is not None else []
-        self.data = data
+        self.data: Dict = data if data is not None else {}
         self.real_hook = real_hook
 
     def __str__(self):
         return f"{self.hook_name}: {self.plugin}; {self.func}"
 
 
-class RealHook:
-    def __init__(self, init_hook: Hook, bot):
+# A RealHook represents a fireable hook, and can be subclassed to change the behaviour of returns etc
+class Hook:
+    def __init__(self, init_hook: InitHook, bot):
         self.errors = []
         self.bot = bot
         self.name = init_hook.hook_name
         self.plugin = init_hook.plugin
         self.func = init_hook.func
-        self.perms = init_hook.perms
         self.data = init_hook.data
         self.todo = []
         self.type = self.__class__.__name__
@@ -50,16 +51,13 @@ class RealHook:
             ret = self.func(*args)
             if ret:
                 self.todo.append(ret)
-        except Exception as e:
-            self.errors.append(e)
+        except Exception as error:
+            # To allow subclasses to change how this behaves
+            self.handle_error(error)
 
-    def handle_error(self):
-        done = []
-        for error in self.errors:
-            self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}. See stdout for trace.")
-            self.bot.log.exception(error)
-            done.append(error)
-        self.errors[:] = [e for e in self.errors if e not in done]
+    def handle_error(self, error):
+        self.bot.log_everywhere(f"exception in {self}. {type(error).__name__}: {str(error)}. See stdout for trace.")
+        self.bot.log.exception(error)
 
     def handle_return(self):
         if self.todo:
@@ -74,20 +72,19 @@ class RealHook:
         self.todo[:] = [t for t in self.todo if t not in done]
 
     def post_hook(self):
-        self.handle_error()
         self.handle_return()
 
 
-class MessageHook(RealHook):
-    def __init__(self, init_hook: Hook, bot):
+class MessageHook(Hook):
+    def __init__(self, init_hook: InitHook, bot):
         super().__init__(init_hook, bot)
         self.msg: 'Message' = None
 
-        # Because pycharm... again
-        return
+    def pre_fire(self, kwargs):
+        self.msg = kwargs["msg"]
 
     def fire(self, **kwargs):
-        self.msg = kwargs["msg"]
+        self.pre_fire(kwargs)
         super().fire(**kwargs)
 
     def handle_return(self):
@@ -105,7 +102,20 @@ class MessageHook(RealHook):
         self.todo[:] = [t for t in self.todo if t not in done]
 
 
-def hook(*name, real_hook=RealHook, func=None, permissions=None, data=None) -> Callable:
+class CommandHook(MessageHook):
+    def __init__(self, init_hook: InitHook, bot):
+        super().__init__(init_hook, bot)
+        self.permissions: List = self.data.get("permissions", [])
+
+    def fire(self, **kwargs):
+        self.pre_fire(kwargs)
+        if permissions.check(self.msg, self.permissions):
+            super().fire(**kwargs)
+        elif self.msg.has_origin:
+            self.msg.origin.send_notice("Sorry, you are not allowed to use this command.")
+
+
+def hook(*name, real_hook=Hook, func=None, data=None) -> Callable:
     def _decorate(f):
         try:
             hook_list = getattr(f, "_IsHook")
@@ -113,7 +123,7 @@ def hook(*name, real_hook=RealHook, func=None, permissions=None, data=None) -> C
             hook_list = []
             setattr(f, "_IsHook", hook_list)
         # hook_list.extend((_hook.lower(), permissions) for _hook in name)
-        hook_list.extend((Hook(_hook.lower(), f.__module__, f, real_hook, permissions, data) for _hook in name))
+        hook_list.extend((InitHook(_hook.lower(), f.__module__, f, real_hook, data) for _hook in name))
         return f
 
     if func is not None:
@@ -144,7 +154,13 @@ def channel_init(func) -> Callable:
 
 
 def command(*name, perm=None) -> Callable:
-    return hook(*(("cmd_" + n) for n in name), permissions=perm, real_hook=MessageHook)
+    data = {}
+    if perm:
+        if isinstance(perm, list):
+            data["permissions"] = perm
+        else:
+            data["permissions"] = [perm]
+    return hook(*(("cmd_" + n) for n in name), real_hook=CommandHook, data=data)
 
 
 def connect_finish(func) -> Callable:
