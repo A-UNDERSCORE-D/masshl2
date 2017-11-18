@@ -7,9 +7,9 @@ from parser import Message
 from channel import Channel
 
 
-def identify(connection):
+def identify(connection: 'Connection'):
     connection.write("PRIVMSG NickServ :IDENTIFY {nsnick} {nspass}".format(
-        nsnick=connection.nsuser, nspass=connection.nspass
+        nsnick=connection.nickserv_user, nspass=connection.nickserv_pass
     ))
 
 
@@ -19,13 +19,9 @@ def on_ping(connection, args):
 
 
 @raw("AUTHENTICATE")
-def send_auth(connection):
-    auth_string = (connection.nick + "\00" + connection.nsuser + "\00"
-                   + connection.nspass).encode()
-
-    connection.write("AUTHENTICATE {}".format(
-        base64.b64encode(auth_string).decode())
-    )
+def send_auth(connection: 'Connection'):
+    auth_string = (connection.nick + "\00" + connection.nickserv_user + "\00" + connection.nickserv_pass).encode()
+    connection.write("AUTHENTICATE {}".format(base64.b64encode(auth_string).decode()))
 
 
 @raw("CAP")
@@ -132,13 +128,13 @@ def on_isupport(connection, args):
 
 
 @raw("376")
-def on_end_motd(connection):
+def on_end_motd(connection: 'Connection'):
     if not connection.cansasl:
         identify(connection)
     for command in connection.commands:
         connection.write(command)
     connection.join(connection.adminchan)
-    connection.join(connection.joinchannels)
+    connection.join(connection.join_channels)
 
 
 @raw("353")

@@ -18,21 +18,21 @@ socket.setdefaulttimeout(5)
 
 
 class Connection:
-    def __init__(self, config: dict, selector, bot, name, debug):
+    def __init__(self, config: dict, selector, bot, name, debug) -> None:
         self.port: str = config["port"]
         self.host: str = config["network"]
         self.is_ssl: bool = config["SSL"]
         self.debug: bool = debug
-        self.joinchannels: list = config["channels"]
+        self.join_channels: list = config["channels"]
         self.nick: str = config["nick"]
         self.user: str = config["user"]
         self.gecos: str = config["gecos"]
-        self.nsuser: str = config["nsident"]
-        self.nspass: str = config["nspass"]
+        self.nickserv_user: str = config["nsident"]
+        self.nickserv_pass: str = config["nspass"]
         self.commands: List[str] = config["commands"]
-        self._adminchan: str = config["adminchan"]
+        self._admin_chan: str = config["adminchan"]
         self.admins: List[str] = config["admins"]
-        self.cmdprefix: str = config["cmdprefix"]
+        self.cmd_prefix: str = config["cmdprefix"]
         self.print_raw: bool = config["print_raw"]
         self.bot: 'Bot' = bot
         self.name: str = name
@@ -67,11 +67,11 @@ class Connection:
         # modes with prefixes, are essentially type B
         self.p_modes = set()
         self.p_mode_d = {}
-        self.banexept = set()
+        self.ban_exemption = set()
         self.invex = set()
-        self.networkname = ""
+        self.network_name = ""
         self.server = ""
-        self.maxJtargets = 0
+        self.max_join_targets = 0
 
         self.storage: DefaultDict[str, Dict] = defaultdict(dict)
 
@@ -216,7 +216,7 @@ class Connection:
     @property
     def adminchan(self) -> 'Union[Channel, str]':
         """Plugins should not store a reference to this"""
-        return self.channels.get(self._adminchan, self._adminchan)
+        return self.channels.get(self._admin_chan, self._admin_chan)
 
     def log_adminchan(self, msg: str):
         if isinstance(self.adminchan, Channel):
