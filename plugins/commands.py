@@ -15,7 +15,7 @@ def on_msg(msg: 'Message', hook):
     if not msg.target:
         return
     args = []
-    if msg.message.startswith(msg.conn.cmdprefix):
+    if msg.message.startswith(msg.conn.cmd_prefix):
         cmd = msg.split_msg[0][1:]
         if len(msg) > 1:
             args = msg.split_msg[1:]
@@ -124,11 +124,10 @@ def cmd_part(args, conn):
     conn.part(chans, reason)
 
 
-@command("eval")
+@command("eval", perm=["bot_control"])
 def command_eval(bot, hook: 'MessageHook'):
     def todo():
         hook.msg.target.send_message("Test2")
-    #return str(f"Test: {hook}, {bot}")
     return todo
 
 
