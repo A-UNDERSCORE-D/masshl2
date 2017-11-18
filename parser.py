@@ -16,7 +16,7 @@ def parse_prefix(prefix):
 
 
 class Message:
-    def __init__(self, connection: 'Connection', args, prefix, msg_type):
+    def __init__(self, connection: 'Connection', args, prefix, msg_type) -> None:
         self.conn = connection
         self.args = args
         self.prefix = prefix
@@ -70,3 +70,7 @@ class Message:
 
     def lower(self) -> str:
         return self.message.lower()
+
+    @property
+    def has_origin(self):
+        return self.origin is not None
