@@ -1,28 +1,20 @@
 from collections import defaultdict
 from typing import Dict, List
-from hook import RealHook
+from hook import Hook
 
 
 # TODO: figure out why ~unload is not responding in-channel.
 
 class EventManager:
-    def __init__(self, bot):
-        self.events: Dict[str, List[RealHook]] = defaultdict(list)
+    def __init__(self, bot) -> None:
+        self.events: Dict[str, List[Hook]] = defaultdict(list)
         self.bot = bot
-
-        # Because pycharm.
-        return
 
     def _launch_hook_functions(self, name: str, **kwargs):
         kwargs["bot"] = self.bot
         kwargs["event_manager"] = self
         for hook in self.events[name.lower()]:
-            try:
-                ret = hook.fire(**kwargs)
-                if ret:
-                    hook.todo.append(ret)
-            except Exception as e:
-                hook.errors.append(e)
+            hook.fire(**kwargs)
 
     def fire_event(self, name: str, **kwargs):
         if name != "tick":
@@ -39,7 +31,7 @@ class EventManager:
         self.events.clear()
         self.events.update(new_hooks)
 
-    def add_hook(self, name, hook: RealHook):
+    def add_hook(self, name, hook: Hook):
         self.events[name.lower()].append(hook)
 
     def remove_plugin_hooks(self, plugin_name):
