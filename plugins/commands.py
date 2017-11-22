@@ -1,3 +1,5 @@
+import time
+import random
 from pprint import pprint
 from typing import TYPE_CHECKING
 
@@ -37,7 +39,7 @@ def on_msg(msg: 'Message', hook):
         "bot":  msg.bot
     }
     print("command:", hook)
-    return msg.bot.call_hook(f"cmd_{cmd}", **data)
+    msg.bot.call_hook(f"cmd_{cmd}", **data)
 
 
 @command("msgme")
@@ -174,3 +176,12 @@ def cmd_test_perms(msg):
 @command("restart", perm=["bot_control"])
 def cmd_restart(bot, args):
     bot.restart(" ".join(args) if args else None)
+
+
+@command("xyzzy")
+def xyzzy():
+    curtime = time.time()
+    if curtime % 42 == 0 or curtime % 47 == 0:
+        return "You are in a maze of twisting passages, all alike."
+    else:
+        return random.choice(["ok", "Ok. Nothing happens", "Nothing happens."])
