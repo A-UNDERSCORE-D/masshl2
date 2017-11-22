@@ -4,17 +4,22 @@ from hook import Hook
 
 
 # TODO: figure out why ~unload is not responding in-channel.
+from plugin import Plugin
+
 
 class EventManager:
     def __init__(self, bot) -> None:
         self.events: Dict[str, List[Hook]] = defaultdict(list)
         self.bot = bot
 
-    def _launch_hook_functions(self, name: str, **kwargs):
+    def _internal_launch(self, hook: Hook, **kwargs):
         kwargs["bot"] = self.bot
         kwargs["event_manager"] = self
+        hook.fire(**kwargs)
+
+    def _launch_hook_functions(self, name: str, **kwargs):
         for hook in self.events[name.lower()]:
-            hook.fire(**kwargs)
+            self._internal_launch(hook, **kwargs)
 
     def fire_event(self, name: str, **kwargs):
         if name != "tick":
@@ -33,6 +38,12 @@ class EventManager:
 
     def add_hook(self, name, hook: Hook):
         self.events[name.lower()].append(hook)
+
+    def load_plugin_hooks(self, plugin: Plugin):
+        self.bot.log.debug(f"Loading hooks for {plugin}")
+        for event in plugin.hooks:
+            self.bot.log.debug(f"`-Loading hook: {event}: {plugin.hooks[event]}")
+            self.events[event] += plugin.hooks[event]
 
     def remove_plugin_hooks(self, plugin_name):
         self.bot.log(f"[EVENT MANAGER] unloading {plugin_name}")
