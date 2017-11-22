@@ -5,8 +5,6 @@ import permissions
 if TYPE_CHECKING:
     from parser import Message
 
-# TODO: make hooks manage the firing of events, or create an event object that stores hooks and fires them when needed.
-
 
 # Hook is loaded onto a function as an attribute by the hook function, its used to build a RealHook that is loaded onto
 # a bots EventManager
@@ -32,7 +30,7 @@ class Hook:
         self.func = init_hook.func
         self.data = init_hook.data
         self.todo = []
-        self.type = self.__class__.__name__
+        self.type = type(self)
 
     def __str__(self):
         return f"{self.type} '{self.name}': {self.plugin}; {self.func}"
@@ -76,7 +74,7 @@ class Hook:
 
 
 class MessageHook(Hook):
-    def __init__(self, init_hook: InitHook, bot):
+    def __init__(self, init_hook: InitHook, bot) -> None:
         super().__init__(init_hook, bot)
         self.msg: 'Message' = None
 
@@ -85,7 +83,7 @@ class MessageHook(Hook):
 
     def fire(self, **kwargs):
         self.pre_fire(kwargs)
-        super().fire(**kwargs)
+        return super().fire(**kwargs)
 
     def handle_return(self):
         done = []
@@ -109,19 +107,23 @@ class CommandHook(MessageHook):
 
     def fire(self, **kwargs):
         self.pre_fire(kwargs)
-        if permissions.check(self.msg, self.permissions):
-            super().fire(**kwargs)
+        if not self.permissions or permissions.check(self.msg, self.permissions):
+            return super().fire(**kwargs)
         elif self.msg.has_origin:
             self.msg.origin.send_notice("Sorry, you are not allowed to use this command.")
+            return False
 
 
 def hook(*name, real_hook=Hook, func=None, data=None) -> Callable:
     def _decorate(f):
+        # TODO: Is a third file a better idea for this? or perhaps making it a config?
+        # because circular imports.
+        from plugin import loaded_attr_name
         try:
-            hook_list = getattr(f, "_IsHook")
+            hook_list = getattr(f, loaded_attr_name)
         except AttributeError:
             hook_list = []
-            setattr(f, "_IsHook", hook_list)
+            setattr(f, loaded_attr_name, hook_list)
         # hook_list.extend((_hook.lower(), permissions) for _hook in name)
         hook_list.extend((InitHook(_hook.lower(), f.__module__, f, real_hook, data) for _hook in name))
         return f
@@ -142,11 +144,11 @@ def message(func) -> Callable:
 
 
 def load(func) -> Callable:
-    return hook(f"on_load_{str(func.__module__)}", func=func)
+    return hook("on_load", func=func)
 
 
 def unload(func) -> Callable:
-    return hook(f"on_unload_{func.__module__}", func=func)
+    return hook("on_unload", func=func)
 
 
 def channel_init(func) -> Callable:
