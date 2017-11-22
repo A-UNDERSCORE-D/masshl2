@@ -86,7 +86,7 @@ def on_welcome(connection, prefix):
 
 
 @raw("005")
-def on_isupport(connection, args):
+def on_isupport(connection: 'Connection', args):
     tokens = args[1:-1]
     for token in tokens:
         if "=" in token:
@@ -116,7 +116,7 @@ def on_isupport(connection, args):
         elif token_name == "EXCEPTS":
             mode = token.split("=")[1]
             connection.a_modes.add(mode)
-            connection.banexept.add(mode)
+            connection.ban_exemption.add(mode)
 
         elif token_name == "INVEX":
             mode = token.split("=")[1]
@@ -204,8 +204,7 @@ def onnotice(connection, args, prefix):
 
 
 def on_msg(msg: 'Message', conn: 'Connection'):
-    todos = []
-    todos.extend(conn.bot.call_hook("message", msg=msg, handle_errors=False) or [])
+    conn.bot.call_hook("message", msg=msg)
 
     # def _handle_todos(tds):
     #     for hook, resp in tds:
@@ -352,6 +351,7 @@ def on_quit(connection, prefix):
     connection.del_user(user)
 
 
+# TODO: Does this still need to reload every plugin? Im not sure it does
 @unload
 def on_unload(bot):
     plugins = list(bot.plugins.keys())
