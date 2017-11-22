@@ -49,6 +49,8 @@ class Connection:
         self.hasquit = False
         self.capcount = 0
         self.cansasl = False
+        self.last_ping = ""
+        self.last_ping_time = 0
 
         self.log = Logger(self)
 
@@ -80,6 +82,7 @@ class Connection:
         def debuglog(msg):
             if self.debug:
                 self.log.debug(msg)
+
         debuglog("called")
         if self.is_ssl:
             self.socket = ssl.wrap_socket(self.socket)
@@ -148,13 +151,8 @@ class Connection:
             "cmd":        cmd,
             "args":       args
         }
-        responses = self.bot.call_hook("raw", **data)
-        responses.extend(self.bot.call_hook("raw_" + cmd, **data))
-        # for _, resp in responses:
-        #     if isinstance(resp, Exception):
-        #         self.log.exception(resp)
-        #     elif resp:
-        #         self.log(resp)
+        self.bot.call_hook("raw", **data)
+        self.bot.call_hook("raw_" + cmd, **data)
 
     def join(self, channels):
         chanstojoin: str = ""
