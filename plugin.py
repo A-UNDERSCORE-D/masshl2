@@ -13,7 +13,7 @@ class PluginManager:
         self.__loaded_attribute_name = "_loaded_plugin"
         self.bot: 'Bot' = bot
         self.event_manager: 'EventManager' = self.bot.event_manager
-        self.plugins: List[Plugin] = []
+        self.plugins: Dict[str, Plugin] = {}
 
     def load_plugin(self, plugin_name):
         self.bot.log.debug(f"Loading plugin: {plugin_name}")
@@ -25,7 +25,7 @@ class PluginManager:
             return
 
         if hasattr(imported_module, self.__loaded_attribute_name):
-            imported_module = self.reload_plugin(plugin_name)
+            self.reload_plugin(self.plugins[plugin_name])
 
         plugin = Plugin(imported_module, self.bot, self)
         try:
@@ -37,12 +37,14 @@ class PluginManager:
             return
 
         # All hooks have succeeded, load the plugin
-        self.plugins.append(plugin)
+        self.plugins[plugin_name] = plugin
         self.event_manager.load_plugin_hooks(plugin)
         setattr(plugin.module, self.__loaded_attribute_name, None)
 
-    def reload_plugin(self, *args) -> 'module':
-        pass
+    def reload_plugin(self, plugin: 'Plugin'):
+        self.event_manager.remove_plugin_hooks(plugin.module.__name__)
+        importlib.reload(plugin.module)
+        return plugin
 
     def load_all_plugins(self):
         pass
@@ -77,7 +79,7 @@ class Plugin:
                 continue
 
             for init_hook in hooks:
-                hook = Hook(init_hook, self.bot)
+                hook = init_hook.real_hook(init_hook, self.bot)
                 if hook.name == "on_load":
                     self.on_load_hooks.append(hook)
                 elif hook.name == "on_unload":
@@ -87,9 +89,6 @@ class Plugin:
 
             delattr(func, self.__loaded_hook_name)
         self.bot.log.debug(f"Finished loading hooks onto {self}: {self.hooks}")
-
-    def _unload_hooks(self):
-        pass
 
     def __str__(self):
         return f"Plugin: {self.module}"
