@@ -3,6 +3,7 @@ import random
 from pprint import pprint
 from typing import TYPE_CHECKING
 
+from bot import Bot
 from hook import message, command
 
 if TYPE_CHECKING:
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
     from hook import MessageHook
 
 # TODO: Add a ~recv command, emulates hexchat's /recieve
+# TODO: cycle command.
 
 
 @message
@@ -59,6 +61,8 @@ def reload(msg: 'Message', args, hook):
             if plugin_name == 'antigravity':
                 msg.target.send_message("https://xkcd.com/353/")
                 continue
+            if not plugin_name.startswith("plugins."):
+                plugin_name = "plugins." + plugin_name
             resp = msg.bot.load_plugin(plugin_name)
             if resp:
                 msg.target.send_message(f"{plugin_name} failed to load. Error: '{resp}'")
@@ -71,11 +75,13 @@ def reload(msg: 'Message', args, hook):
 
 
 @command("unload", perm=["bot_control"])
-def cmd_unload(args, bot):
+def cmd_unload(args, bot: 'Bot'):
     if args:
         def todo():
-            for arg in args:
-                bot.unload(arg)
+            for plugin_name in args:
+                if not plugin_name.startswith("plugins."):
+                    plugin_name = "plugins." + plugin_name
+                bot.plugin_manager.unload_plugin(plugin_name)
             return f"{' '.join(args)} unloaded"
 
         return todo
