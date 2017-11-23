@@ -21,6 +21,6 @@ def watchdog(bot):
 @tick
 def run_timer_hooks(bot):
     now = int(time.time())
-    for h in bot.hooks.keys():
+    for h in bot.event_manager.events.keys():
         if h.startswith("timer_") and now % int(h.split("_")[1]) == 0:
-            bot.handle_todos(bot.call_hook(h, now=now))
+            bot.call_hook(h, now=now)
