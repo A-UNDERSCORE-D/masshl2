@@ -41,11 +41,11 @@ class Hook:
         kwargs["start_time"] = self.bot.start_time
         kwargs["hook"] = self
         args = []
-        for arg in sig.parameters:
-            assert arg in kwargs, \
-                f"Callback requested an argument that the hook launcher was not passed. it was '{arg}'"
-            args.append(kwargs[arg])
         try:
+            for arg in sig.parameters:
+                assert arg in kwargs, \
+                    f"Callback requested an argument that the hook launcher was not passed. it was '{arg}'"
+                args.append(kwargs[arg])
             ret = self.func(*args)
             if ret:
                 self.todo.append(ret)
