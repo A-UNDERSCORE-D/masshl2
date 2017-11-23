@@ -30,7 +30,7 @@ class PluginManager:
         plugin = Plugin(imported_module, self.bot, self)
         try:
             for hook in plugin.on_load_hooks:
-                self.event_manager._internal_launch(hook, **{"plugin": plugin})
+                self.event_manager.naked_fire(hook, plugin=plugin)
         except Exception as e:
             self.bot.log_everywhere(f"Error during on load hooks for {plugin_name}: {type(e).__name__}; {e}")
             self.bot.log.exception(e)
@@ -42,12 +42,26 @@ class PluginManager:
         setattr(plugin.module, self.__loaded_attribute_name, None)
 
     def reload_plugin(self, plugin: 'Plugin'):
-        self.event_manager.remove_plugin_hooks(plugin.module.__name__)
+        self.unload_plugin(plugin.module.__name__)
+
         importlib.reload(plugin.module)
         return plugin
 
-    def load_all_plugins(self):
-        pass
+    def unload_plugin(self, name):
+        assert name in self.plugins, f"plugin {name} which was requested to be unloaded not found in plugin list"
+        self.event_manager.remove_plugin_hooks(name)
+        try:
+            for hook in self.plugins[name].on_unload_hooks:
+                self.event_manager.naked_fire(hook)
+        except Exception as e:
+            self.bot.log_everywhere(f"Error in unload hooks for {name}: {type(e).__name__}; {e}")
+            self.bot.log.exception(e)
+        else:
+            del self.plugins[name]
+            self.bot.log.debug(f"Completed unload for {name}")
+
+
+
 
 
 loaded_attr_name = "_loaded_hook"
@@ -58,7 +72,7 @@ class Plugin:
         self.module = plugin_module
         self.bot: 'Bot' = bot
         self.event_manager = self.bot.event_manager
-        self.plugin_manager = self.event_manager
+        self.plugin_manager = plugin_manager
 
         self.on_load_hooks: List[Hook] = []
         self.on_unload_hooks: List[Hook] = []
