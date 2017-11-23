@@ -1,10 +1,11 @@
-from hook import raw, unload
 import base64
+
 import parser
-from logger import logall, logchan
-from connection import Connection
-from parser import Message
 from channel import Channel
+from connection import Connection
+from hook import raw, unload
+from logger import logall, logchan
+from parser import Message
 
 
 def identify(connection: 'Connection'):
