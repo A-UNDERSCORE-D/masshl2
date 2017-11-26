@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class PluginManager:
-    def __init__(self, bot):
+    def __init__(self, bot) -> None:
         self.__loaded_attribute_name = "_loaded_plugin"
         self.bot: 'Bot' = bot
         self.event_manager: 'EventManager' = self.bot.event_manager
@@ -61,14 +61,11 @@ class PluginManager:
             self.bot.log.debug(f"Completed unload for {name}")
 
 
-
-
-
 loaded_attr_name = "_loaded_hook"
 
 
 class Plugin:
-    def __init__(self, plugin_module: 'module', bot: 'Bot', plugin_manager: PluginManager):
+    def __init__(self, plugin_module: 'module', bot: 'Bot', plugin_manager: PluginManager) -> None:
         self.module = plugin_module
         self.bot: 'Bot' = bot
         self.event_manager = self.bot.event_manager
