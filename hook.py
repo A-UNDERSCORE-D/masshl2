@@ -101,7 +101,7 @@ class MessageHook(Hook):
 
 
 class CommandHook(MessageHook):
-    def __init__(self, init_hook: InitHook, bot):
+    def __init__(self, init_hook: InitHook, bot) -> None:
         super().__init__(init_hook, bot)
         self.permissions: List = self.data.get("permissions", [])
 
