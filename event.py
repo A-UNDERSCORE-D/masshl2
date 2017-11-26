@@ -27,8 +27,12 @@ class EventManager:
             self._internal_launch(hook, **kwargs)
 
     def fire_event(self, name: str, **kwargs):
+        name = name.casefold()
         if not name.startswith("tick"):
             self.debug_log(f"[EVENT MANAGER] running hook: {name}")
+        if name not in self.events:
+            self.debug_log(f"[EVENT_MANAGER] Hook fired that does not exist {name}")
+            return
         self._launch_hook_functions(name, **kwargs)
         self.fire_post_event(name)
 
@@ -40,9 +44,11 @@ class EventManager:
         new_hooks = {n: h for n, h in self.events.items() if h}
         self.events.clear()
         self.events.update(new_hooks)
+        self.debug_log(f"Hooks cleaned up. new hooks:")
+        self.debug_log(self.str_eventlist())
 
     def add_hook(self, name, hook: Hook):
-        self.events[name.lower()].append(hook)
+        self.events[name.casefold()].append(hook)
 
     def load_plugin_hooks(self, plugin: Plugin):
         self.debug_log(f"Loading hooks for {plugin}")
@@ -66,3 +72,10 @@ class EventManager:
         if not self.debug:
             return
         self.bot.log.debug(msg)
+
+    def str_eventlist(self):
+        out = ""
+        for k in self.events:
+            out += k
+            out += "\n`-".join([str(x) for x in self.events[k]])
+        return out
