@@ -1,5 +1,7 @@
 import re
 import typing
+from typing import List, Tuple, Optional
+
 from channel import Channel
 
 if typing.TYPE_CHECKING:
@@ -15,6 +17,30 @@ def parse_prefix(prefix):
     return match.group('nick'), match.group('user'), match.group('host')
 
 
+# TODO: This WILL have a bug where type a modes require parameters
+def parse_modes(mode_string: str, conn: 'Connection'):
+    modes, *args = mode_string.split()
+    adding = True
+    out: List[Tuple[str, Optional[str], bool]] = []
+    for mode in modes:
+        if mode == "+":
+            adding = True
+        elif mode == "-":
+            adding = False
+        elif mode in conn.a_modes:
+            out.append((mode, args.pop(0), adding))
+        elif mode in (conn.b_modes | conn.p_modes):
+            out.append((mode, args.pop(0), adding))
+        elif mode in conn.c_modes:
+            if adding:
+                out.append((mode, args.pop(0), adding))
+            else:
+                out.append((mode, None, adding))
+        elif mode in conn.d_modes:
+            out.append((mode, None, adding))
+    return out
+
+
 class Message:
     def __init__(self, connection: 'Connection', args, prefix, msg_type) -> None:
         self.conn = connection
@@ -26,13 +52,13 @@ class Message:
         self.message: str = ""
         self._parse_msg(prefix, args)
         self.split_msg = self.message.split(" ")
-        self.eol_msg = [' '.join(args[i:]) for i in range(len(args))]
+        self.eol_msg = [' '.join(self.split_msg[i:]) for i in range(len(self.split_msg))]
 
     @property
     def bot(self) -> 'Bot':
         return self.conn.bot
 
-# TODO: suppress the error messages during connect, they're not needed then and add to clutter
+    # TODO: suppress the error messages during connect, they're not needed then and add to clutter
     def _parse_msg(self, prefix, args):
         nick, user, host = parse_prefix(prefix)
         if args[0][0] in self.conn.chantypes:
