@@ -2,9 +2,13 @@ from typing import TYPE_CHECKING
 from hook import command
 import json
 
+from parser import parse_modes
+
 if TYPE_CHECKING:
     from bot import Bot
     from event import EventManager
+    from channel import Channel
+    from parser import Message
 
 
 @command("event_manager", "bot_control")
@@ -15,6 +19,7 @@ def eventmanager_command(bot: 'Bot', event_manager: 'EventManager', args):
 
     if subcommand == "toggle_debug":
         event_manager.debug = not event_manager.debug
+        return f"Event manager debug set to {event_manager.debug}"
 
     elif subcommand == "print":
         print(event_manager.events)
@@ -33,7 +38,6 @@ def eventmanager_command(bot: 'Bot', event_manager: 'EventManager', args):
         return cleanup
 
 
-
 @command("command_debug")
 def command_debug(bot):
     tmp = {}
@@ -46,3 +50,9 @@ def command_debug(bot):
 @command("dump_connections")
 def conn_debug(bot):
     return bot.connections
+
+
+@command("test_mode")
+def test_mode(target: 'Channel', msg: 'Message', conn):
+    print(msg.eol_msg)
+    return parse_modes(msg.eol_msg[1], conn)
