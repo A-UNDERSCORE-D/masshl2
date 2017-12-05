@@ -1,5 +1,8 @@
 from typing import Callable, Dict, List, TYPE_CHECKING
 import inspect
+
+import time
+
 import permissions
 
 if TYPE_CHECKING:
@@ -87,7 +90,6 @@ class MessageHook(Hook):
 
     def handle_return(self):
         done = []
-        print(self, self.todo)
         for todo in self.todo:
             msg = ""
             if callable(todo):
@@ -114,6 +116,17 @@ class CommandHook(MessageHook):
             return False
 
 
+class TimerHook(Hook):
+    def __init__(self, init_hook: InitHook, bot):
+        super().__init__(init_hook, bot)
+        self.last_fire = time.time()
+
+    def fire(self, **kwargs):
+        if self.last_fire - time.time() < 1:
+            return
+        super().fire(**kwargs)
+
+
 def hook(*name, real_hook=Hook, func=None, data=None) -> Callable:
     def _decorate(f):
         # TODO: Is a third file a better idea for this? or perhaps making it a config?
@@ -124,7 +137,6 @@ def hook(*name, real_hook=Hook, func=None, data=None) -> Callable:
         except AttributeError:
             hook_list = []
             setattr(f, loaded_attr_name, hook_list)
-        # hook_list.extend((_hook.lower(), permissions) for _hook in name)
         hook_list.extend((InitHook(_hook.lower(), f.__module__, f, real_hook, data) for _hook in name))
         return f
 
@@ -174,5 +186,5 @@ def tick(func) -> Callable:
 
 
 # Timer isn't guaranteed to happen at the time, but will never be early
-def timer(time) -> Callable:
-    return hook(f"timer_{time}")
+def timer(wait_time) -> Callable:
+    return hook(f"timer_{wait_time}", real_hook=TimerHook)
