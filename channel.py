@@ -1,6 +1,6 @@
 from membership import Membership
 from user import User
-from typing import Dict, DefaultDict, Union, List, TYPE_CHECKING
+from typing import Dict, DefaultDict, Union, List, TYPE_CHECKING, Tuple, Optional
 from collections import defaultdict
 if TYPE_CHECKING:
     from connection import Connection
@@ -83,11 +83,20 @@ class Channel:
     def conn(self):
         return self.connection
 
+    # TODO: Full mode parser
     def set_modes(self, modes: Dict):
-        to_set = {}
-        for mode in modes:
+        pass
+
+    def add_modes(self, modes: Tuple[Tuple[str, Optional[str]]]):
+        for mode, param in modes:
             assert mode in self.conn.channel_modes, f"mode {mode} is not a valid channel mode on {self.conn.name}"
             if mode in self.conn.a_modes:
-                pass
+                assert param is not None
+                self.conn.write(f"MODE {self} +{mode} {param}")
 
+    def is_op(self, nick):
+        return self.get_member(nick).is_op
 
+    @property
+    def bot_is_op(self):
+        return self.is_op(self.connection.nick)
