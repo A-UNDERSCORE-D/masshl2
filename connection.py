@@ -225,3 +225,6 @@ class Connection:
     @property
     def channel_modes(self):
         return self.a_modes | self.b_modes | self.c_modes | self.p_modes
+
+    def renick(self, new_nick):
+        self.nick = new_nick
