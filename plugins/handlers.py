@@ -207,30 +207,6 @@ def onnotice(connection, args, prefix):
 def on_msg(msg: 'Message', conn: 'Connection'):
     conn.bot.call_hook("message", msg=msg)
 
-    # def _handle_todos(tds):
-    #     for hook, resp in tds:
-    #         # This is a nested call, deal with it via recursion.
-    #         if isinstance(resp, list):
-    #             _handle_todos(resp)
-    #             continue
-    #
-    #         if isinstance(resp, Exception):
-    #             conn.log_adminchan(f"{hook.func.__name__} in {hook.func.__module__} just broke. Who wrote it? "
-    #                                f"I want their head. Exception: {type(resp).__name__}: {str(resp)}. "
-    #                                f"see stdout for trace")
-    #         elif callable(resp):
-    #             resp_msg = resp()
-    #             if resp_msg:
-    #                 msg.target.send_message(str(resp_msg))
-    #         elif isinstance(resp, list):
-    #             for response in conn.bot.handle_todos(resp, ret=True):
-    #                 msg.target.send_message(str(response))
-    #         elif resp:
-    #             print(hook, resp)
-    #             msg.target.send_message(str(resp))
-    #
-    # _handle_todos(todos)
-
 
 @raw("MODE")
 def on_mode(connection, args):
@@ -324,13 +300,13 @@ def on_kick(connection, args):
 
 
 @raw("NICK")
-def on_nick(connection, prefix, args):
+def on_nick(connection: 'Connection', prefix, args):
     if not prefix:
         raise ValueError
     old_nick = prefix.split("!")[0]
     new_nick = args[0]
     if old_nick == connection.nick:
-        connection.nick = new_nick
+        connection.renick(new_nick)
     try:
         user = connection.users[old_nick]
     except KeyError:
