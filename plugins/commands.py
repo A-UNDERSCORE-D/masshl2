@@ -38,9 +38,10 @@ def on_msg(msg: 'Message', hook):
         "cmd":  cmd,
         "args": args,
         "conn": msg.conn,
-        "bot":  msg.bot
+        "bot":  msg.bot,
+        "origin": msg.origin,
+        "target": msg.target
     }
-    print("command:", hook)
     msg.bot.call_hook(f"cmd_{cmd}", **data)
 
 
@@ -51,7 +52,6 @@ def msgme(msg: 'Message', args):
 
 @command("reload", perm=["bot_control"])
 def reload(msg: 'Message', args, hook):
-    print(hook)
     if len(args) < 1:
         msg.target.send_message("reload requires an argument")
         return
