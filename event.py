@@ -28,7 +28,7 @@ class EventManager:
 
     def fire_event(self, name: str, **kwargs):
         name = name.casefold()
-        if not name.startswith("tick"):
+        if self.debug:
             self.debug_log(f"[EVENT MANAGER] running hook: {name}")
         if name not in self.events:
             self.debug_log(f"[EVENT_MANAGER] Hook fired that does not exist {name}")
