@@ -1,3 +1,4 @@
+import collections
 import re
 import typing
 from typing import List, Tuple, Optional
@@ -21,23 +22,25 @@ def parse_prefix(prefix):
 def parse_modes(mode_string: str, conn: 'Connection'):
     modes, *args = mode_string.split()
     adding = True
-    out: List[Tuple[str, Optional[str], bool]] = []
+    mode_tuple = collections.namedtuple("mode_tuple", "mode args adding")
+    out: List[mode_tuple] = []
     for mode in modes:
+        assert mode in conn.channel_modes, f"mode requested on {conn} that isnt provided"
         if mode == "+":
             adding = True
         elif mode == "-":
             adding = False
         elif mode in conn.a_modes:
-            out.append((mode, args.pop(0), adding))
+            out.append(mode_tuple(mode, args.pop(0), adding))
         elif mode in (conn.b_modes | conn.p_modes):
-            out.append((mode, args.pop(0), adding))
+            out.append(mode_tuple(mode, args.pop(0), adding))
         elif mode in conn.c_modes:
             if adding:
-                out.append((mode, args.pop(0), adding))
+                out.append(mode_tuple(mode, args.pop(0), adding))
             else:
-                out.append((mode, None, adding))
+                out.append(mode_tuple(mode, None, adding))
         elif mode in conn.d_modes:
-            out.append((mode, None, adding))
+            out.append(mode_tuple(mode, None, adding))
     return out
 
 
