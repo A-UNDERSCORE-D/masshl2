@@ -69,6 +69,7 @@ class Connection:
         # modes with prefixes, are essentially type B
         self.p_modes = set()
         self.p_mode_d = {}
+        self.user_modes = set()
         self.ban_exemption = set()
         self.invex = set()
         self.network_name = ""

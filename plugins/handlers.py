@@ -86,6 +86,11 @@ def on_welcome(connection, prefix):
     connection.server = prefix
 
 
+@raw("004")
+def on_my_info(connection: 'Connection', args):
+    connection.user_modes = {mode for mode in args[3]}
+
+
 @raw("005")
 def on_isupport(connection: 'Connection', args):
     tokens = args[1:-1]
@@ -97,7 +102,7 @@ def on_isupport(connection: 'Connection', args):
             token_name = token
 
         if token_name == "NETWORK":
-            connection.networkname = token.split("=")[1]
+            connection.network_name = token.split("=")[1]
 
         elif token_name == "PREFIX":
             pfx = token.split("=")[1]
