@@ -228,3 +228,6 @@ class Connection:
 
     def renick(self, new_nick):
         self.nick = new_nick
+
+    def __str__(self):
+        return f"Connection: {self.name} on {self.network_name}."
