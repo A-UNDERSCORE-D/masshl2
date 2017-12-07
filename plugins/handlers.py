@@ -8,12 +8,6 @@ from logger import logall, logchan
 from parser import Message
 
 
-def identify(connection: 'Connection'):
-    connection.write("PRIVMSG NickServ :IDENTIFY {nsnick} {nspass}".format(
-        nsnick=connection.nickserv_user, nspass=connection.nickserv_pass
-    ))
-
-
 @raw("PING")
 def on_ping(connection, args):
     connection.write("PONG :" + " ".join(args))
@@ -23,6 +17,23 @@ def on_ping(connection, args):
 def send_auth(connection: 'Connection'):
     auth_string = (connection.nick + "\00" + connection.nickserv_user + "\00" + connection.nickserv_pass).encode()
     connection.write("AUTHENTICATE {}".format(base64.b64encode(auth_string).decode()))
+
+
+def do_sasl_auth(conn: 'Connection'):
+    if conn.nickserv_user and conn.nickserv_pass:
+        conn.write("AUTHENTICATE PLAIN")
+    else:
+        conn.log("SASL auth requested but no either no username or password was found to auth with")
+        cap_decrement(conn)
+
+
+def do_nickserv_auth(conn: 'Connection'):
+    if conn.nickserv_user and conn.nickserv_pass:
+        conn.write("PRIVMSG NickServ :IDENTIFY {nsnick} {nspass}".format(
+            nsnick=conn.nickserv_user, nspass=conn.nickserv_pass
+        ))
+    else:
+        conn.log("PRIVMSG auth requested but no either no username or password was found to auth with")
 
 
 @raw("CAP")
@@ -44,7 +55,7 @@ def handle_cap(connection, args):
         if cap == "sasl":
             connection.cansasl = True
             cap_increment(connection)
-            connection.write("AUTHENTICATE PLAIN")
+            do_sasl_auth(connection)
         elif cap == "userhost-in-names":
             connection.uhnames = True
 
@@ -136,7 +147,7 @@ def on_isupport(connection: 'Connection', args):
 @raw("376")
 def on_end_motd(connection: 'Connection'):
     if not connection.cansasl:
-        identify(connection)
+        do_nickserv_auth(connection)
     for command in connection.commands:
         connection.write(command)
     connection.join(connection.adminchan)
