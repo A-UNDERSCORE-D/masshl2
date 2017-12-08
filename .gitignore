@@ -152,4 +152,4 @@ ENV/
 .nfs*
 
 .idea
-config.json
+masshl/config.json
