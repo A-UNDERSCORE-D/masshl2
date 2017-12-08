@@ -43,7 +43,7 @@ class Connection:
         self.buffer = b""
         self.uhnames = False
         self.channels = {}
-        self.chantypes = []
+        self.chantypes = []     # TODO: Should this be a set?
         self.users = WeakValueDictionary()
         self.connected = False
         self.hasquit = False
@@ -66,7 +66,7 @@ class Connection:
         self.c_modes = set()
         # changes a setting on a channel, NEVER has a parameter
         self.d_modes = set()
-        # modes with prefixes, are essentially type B
+        # modes with prefixes, essentially type B
         self.p_modes = set()
         self.p_mode_d = {}
         self.user_modes = set()
