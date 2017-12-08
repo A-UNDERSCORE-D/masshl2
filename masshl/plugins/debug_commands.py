@@ -1,14 +1,16 @@
 from typing import TYPE_CHECKING
-from hook import command
+
+from masshl.connection import Connection
+from masshl.hook import command
 import json
 
-from parser import parse_modes
+from masshl.parser import parse_modes
 
 if TYPE_CHECKING:
-    from bot import Bot
-    from event import EventManager
-    from channel import Channel
-    from parser import Message
+    from masshl.bot import Bot
+    from masshl.event import EventManager
+    from masshl.channel import Channel
+    from masshl.parser import Message
 
 
 @command("event_manager", "bot_control")
@@ -56,3 +58,8 @@ def conn_debug(bot):
 def test_mode(target: 'Channel', msg: 'Message', conn):
     print(msg.eol_msg)
     return parse_modes(msg.eol_msg[1], conn)
+
+@command("dump_modes")
+def dump_modes(conn: 'Connection'):
+    return f"Type A: {conn.a_modes}, type B {conn.b_modes}, type C {conn.c_modes}, type D {conn.d_modes}, " \
+           f"type P {conn.p_mode_d}, user modes {conn.user_modes}"

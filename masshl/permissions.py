@@ -1,8 +1,8 @@
 from fnmatch import fnmatch
-from channel import Channel
+from masshl.channel import Channel
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from parser import Message
+    from masshl.parser import Message
 
 
 def check(msg: 'Message', perms) -> bool:

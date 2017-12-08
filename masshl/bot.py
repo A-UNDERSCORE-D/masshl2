@@ -5,12 +5,12 @@ from collections import defaultdict
 from selectors import DefaultSelector
 from typing import Dict, DefaultDict, List
 
-from config import Config
-from connection import Connection
-from event import EventManager
-from hook import Hook
-from logger import Logger
-from plugin import PluginManager
+from masshl.config import Config
+from masshl.connection import Connection
+from masshl.event import EventManager
+from masshl.hook import Hook
+from masshl.logger import Logger
+from masshl.plugin import PluginManager
 
 
 class Bot:

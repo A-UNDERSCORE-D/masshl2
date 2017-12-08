@@ -1,14 +1,14 @@
 import collections
 import re
 import typing
-from typing import List, Tuple, Optional
+from typing import List
 
-from channel import Channel
+from masshl.channel import Channel
 
 if typing.TYPE_CHECKING:
-    from user import User
-    from connection import Connection
-    from bot import Bot
+    from masshl.user import User
+    from masshl.connection import Connection
+    from masshl.bot import Bot
 
 PREFIX_RE = re.compile(r'(?P<nick>.+?)(?:!(?P<user>.+?))?(?:@(?P<host>.+?))?')
 

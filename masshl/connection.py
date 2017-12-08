@@ -5,14 +5,14 @@ from selectors import EVENT_READ
 from typing import DefaultDict, Dict, TYPE_CHECKING
 from weakref import WeakValueDictionary
 
-import parser
-from channel import Channel
-from logger import Logger
-from user import User
+from masshl import parser
+from masshl.channel import Channel
+from masshl.logger import Logger
+from masshl.user import User
 
 if TYPE_CHECKING:
     from typing import List, Union
-    from bot import Bot
+    from masshl.bot import Bot
 
 socket.setdefaulttimeout(5)
 

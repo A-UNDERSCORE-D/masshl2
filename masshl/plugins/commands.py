@@ -3,12 +3,12 @@ import random
 from pprint import pprint
 from typing import TYPE_CHECKING
 
-from bot import Bot
-from hook import message, command
+from masshl.bot import Bot
+from masshl.hook import message, command
 
 if TYPE_CHECKING:
-    from parser import Message
-    from hook import MessageHook
+    from masshl.parser import Message
+    from masshl.hook import MessageHook
 
 # TODO: Add a ~recv command, emulates hexchat's /recieve
 # TODO: cycle command.

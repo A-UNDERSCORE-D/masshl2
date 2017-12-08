@@ -1,15 +1,15 @@
 import base64
 
-import parser
-from channel import Channel
-from connection import Connection
-from hook import raw, unload
-from logger import logall, logchan
-from parser import Message
+from masshl import parser
+from masshl.channel import Channel
+from masshl.connection import Connection
+from masshl.hook import raw, unload
+from masshl.logger import logall, logchan
+from masshl.parser import Message
 
 
 @raw("PING")
-def on_ping(connection, args):
+def on_ping(connection: 'Connection', args):
     connection.write("PONG :" + " ".join(args))
 
 
@@ -37,7 +37,7 @@ def do_nickserv_auth(conn: 'Connection'):
 
 
 @raw("CAP")
-def handle_cap(connection, args):
+def handle_cap(connection: 'Connection', args):
     caps = args[1].split("=")
     command = caps[0]
     if command == "LS":
@@ -70,30 +70,30 @@ def handle_cap(connection, args):
             connection.cansasl = False
 
 
-def cap_increment(connection):
+def cap_increment(connection: 'Connection'):
     connection.capcount += 1
 
 
-def cap_decrement(connection):
+def cap_decrement(connection: 'Connection'):
     connection.capcount -= 1
     if connection.capcount <= 0:
         connection.write("CAP END")
 
 
 @raw("903")
-def good_sasl(connection):
+def good_sasl(connection: 'Connection'):
     cap_decrement(connection)
 
 
 @raw("904")
-def bad_sasl(connection):
+def bad_sasl(connection: 'Connection'):
     cap_decrement(connection)
     connection.log("SASL login failed, attempting PRIVMSG based login")
     connection.cansasl = False
 
 
 @raw("001")
-def on_welcome(connection, prefix):
+def on_welcome(connection: 'Connection', prefix):
     connection.server = prefix
 
 
@@ -155,7 +155,7 @@ def on_end_motd(connection: 'Connection'):
 
 
 @raw("353")
-def on_names(connection, args):
+def on_names(connection: 'Connection', args):
     names = args[3].split()
     chan: Channel = connection.channels[args[2]]
 
@@ -186,14 +186,14 @@ def on_names(connection, args):
 
 
 @raw("366")
-def on_name_send(connection, args):
+def on_name_send(connection: 'Connection', args):
     chan = connection.channels[args[1]]
     chan.receivingnames = False
     logchan(chan)
 
 
 @raw("JOIN")
-def on_join(connection, prefix, args):
+def on_join(connection: 'Connection', prefix, args):
     name = args[0]
     chan = connection.channels.get(args[0])
     nick = prefix.split("!")[0]
@@ -209,13 +209,13 @@ def on_join(connection, prefix, args):
 
 
 @raw("PRIVMSG")
-def on_privmsg(connection, args, prefix):
+def on_privmsg(connection: 'Connection', args, prefix):
     msg = parser.Message(connection, args, prefix, "PRIVMSG")
     on_msg(msg, connection)
 
 
 @raw("NOTICE")
-def onnotice(connection, args, prefix):
+def onnotice(connection: 'Connection', args, prefix):
     msg = parser.Message(connection, args, prefix, "NOTICE")
     on_msg(msg, connection)
 
@@ -225,7 +225,7 @@ def on_msg(msg: 'Message', conn: 'Connection'):
 
 
 @raw("MODE")
-def on_mode(connection, args):
+def on_mode(connection: 'Connection', args):
     target = args[0]
     modes = args[1]
     mode_args = args[2:]
@@ -265,7 +265,7 @@ def on_mode(connection, args):
 
 
 @raw("PART")
-def on_part(connection, prefix, args):
+def on_part(connection: 'Connection', prefix, args):
     chan_name = args[0]
     try:
         chan = connection.channels[chan_name]
@@ -290,7 +290,7 @@ def on_part(connection, prefix, args):
 
 
 @raw("KICK")
-def on_kick(connection, args):
+def on_kick(connection: 'Connection', args):
     kicked_nick = args[1]
     kicked_chan = args[0]
 
@@ -333,7 +333,7 @@ def on_nick(connection: 'Connection', prefix, args):
 
 
 @raw("QUIT")
-def on_quit(connection, prefix):
+def on_quit(connection: 'Connection', prefix):
     nick = prefix.split("!")[0]
     try:
         user = connection.users[nick]

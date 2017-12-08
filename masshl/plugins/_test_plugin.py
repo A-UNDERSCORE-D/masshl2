@@ -1,4 +1,4 @@
-from hook import load
+from masshl.hook import load
 
 
 @load

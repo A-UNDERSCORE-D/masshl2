@@ -1,11 +1,11 @@
 import string
 
-from hook import load, message, command
-from channel import Channel
-from user import User
+from masshl.hook import load, message, command
+from masshl.channel import Channel
+from masshl.user import User
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from parser import Message
+    from masshl.parser import Message
 
 __plugin_name__ = "masshl2"
 
@@ -69,7 +69,9 @@ def scan_message(msg: 'Message', channel: Channel, source: User):
 
 
 def try_ban(chan: Channel, user: User):
-    pass
+    if not chan.bot_is_op:
+        return f"Received a request to ban {user} from {chan}. Bot is not opped."
+
 
 
 @message

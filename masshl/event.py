@@ -1,10 +1,9 @@
 from collections import defaultdict
 from typing import Dict, List
-from hook import Hook, command
-
+from masshl.hook import Hook
 
 # TODO: figure out why ~unload is not responding in-channel.
-from plugin import Plugin
+from masshl.plugin import Plugin
 
 
 class EventManager:

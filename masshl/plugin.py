@@ -1,11 +1,11 @@
 import importlib
 from typing import TYPE_CHECKING, List, Dict
 from collections import defaultdict
-from hook import Hook, InitHook
+from masshl.hook import Hook, InitHook
 
 if TYPE_CHECKING:
-    from bot import Bot
-    from event import EventManager
+    from masshl.bot import Bot
+    from masshl.event import EventManager
 
 
 class PluginManager:

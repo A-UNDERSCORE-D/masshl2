@@ -4,7 +4,7 @@ from collections import defaultdict
 from weakref import WeakValueDictionary
 
 if TYPE_CHECKING:
-    from connection import Connection
+    from masshl.connection import Connection
 
 
 class User:

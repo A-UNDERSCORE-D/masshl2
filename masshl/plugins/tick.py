@@ -1,4 +1,4 @@
-from hook import tick, load, hook, timer
+from masshl.hook import tick
 import time
 
 last = 0
@@ -8,7 +8,7 @@ last = 0
 def watchdog(bot):
     global last
     now = time.time()
-    if last == 0 and now - bot.start_time < 25:
+    if last == 0 and now - bot.start_time < 25:  # the 25 is in case we're reloaded
         last = bot.start_time
         startup_time = round(now - bot.start_time, 3)
         bot.log.debug(f"Startup took {startup_time}s.")

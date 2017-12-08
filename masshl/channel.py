@@ -1,9 +1,9 @@
-from membership import Membership
-from user import User
-from typing import Dict, DefaultDict, Union, List, TYPE_CHECKING, Tuple, Optional
+from masshl.membership import Membership
+from masshl.user import User
+from typing import Dict, DefaultDict, TYPE_CHECKING, Tuple, Optional
 from collections import defaultdict
 if TYPE_CHECKING:
-    from connection import Connection
+    from masshl.connection import Connection
 
 
 class Channel:

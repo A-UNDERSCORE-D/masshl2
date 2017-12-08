@@ -3,10 +3,10 @@ import inspect
 
 import time
 
-import permissions
+from masshl import permissions
 
 if TYPE_CHECKING:
-    from parser import Message
+    from masshl.parser import Message
 
 
 # Hook is loaded onto a function as an attribute by the hook function, its used to build a RealHook that is loaded onto
@@ -131,7 +131,7 @@ def hook(*name, real_hook=Hook, func=None, data=None) -> Callable:
     def _decorate(f):
         # TODO: Is a third file a better idea for this? or perhaps making it a config?
         # because circular imports.
-        from plugin import loaded_attr_name
+        from masshl.plugin import loaded_attr_name
         try:
             hook_list = getattr(f, loaded_attr_name)
         except AttributeError:

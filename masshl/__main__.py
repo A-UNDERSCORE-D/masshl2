@@ -4,7 +4,7 @@ import time
 import os
 from random import choice
 
-from bot import Bot
+from masshl.bot import Bot
 
 # TODO: NEEDS MOAR ASCII ART!
 
