@@ -18,19 +18,20 @@ def parse_prefix(prefix):
     return match.group('nick'), match.group('user'), match.group('host')
 
 
+mode_tuple = collections.namedtuple("mode_tuple", "mode args adding")
+
+
 # TODO: This WILL have a bug where type a modes require parameters
 def parse_modes(mode_string: str, conn: 'Connection'):
     modes, *args = mode_string.split()
     adding = True
-    mode_tuple = collections.namedtuple("mode_tuple", "mode args adding")
     out: List[mode_tuple] = []
     for mode in modes:
-        assert mode in conn.channel_modes, f"mode requested on {conn} that isnt provided"
-        if mode == "+":
-            adding = True
-        elif mode == "-":
-            adding = False
-        elif mode in conn.a_modes:
+        if mode == "+" or mode == "-":
+            adding = mode == "+"
+            continue
+        assert mode in conn.channel_modes, f"mode '{mode}' requested that isn't provided by {conn}"
+        if mode in conn.a_modes:
             out.append(mode_tuple(mode, args.pop(0), adding))
         elif mode in (conn.b_modes | conn.p_modes):
             out.append(mode_tuple(mode, args.pop(0), adding))
